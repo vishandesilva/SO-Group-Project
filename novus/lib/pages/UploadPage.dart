@@ -9,8 +9,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/widgets/HeaderWidget.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:image/image.dart' as image;
+import 'package:image/image.dart' as imageLib;
 import 'package:novus/widgets/ProgressWidget.dart';
+import 'package:photofilters/filters/preset_filters.dart';
+import 'package:photofilters/photofilters.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:location/location.dart';
@@ -43,36 +45,82 @@ class _UploadPageState extends State<UploadPage> {
   // use phone camera to take and upload a photo
   takePhoto() async {
     var imagePicker = ImagePicker();
-    PickedFile tempImage =
-        await imagePicker.getImage(source: ImageSource.camera, maxHeight: 700, maxWidth: 900, imageQuality: 100);
+    PickedFile tempImage = await imagePicker.getImage(
+      source: ImageSource.camera,
+      maxHeight: 700,
+      maxWidth: 900,
+      imageQuality: 100,
+    );
     if (tempImage.path != null) {
       final image = FirebaseVisionImage.fromFilePath(tempImage.path);
       final faceDector = FirebaseVision.instance.faceDetector(
         FaceDetectorOptions(mode: FaceDetectorMode.accurate),
       );
-
       final result = await faceDector.processImage(image);
       if (result.isEmpty) {
-        File croppedFile = await ImageCropper.cropImage(sourcePath: tempImage.path, compressQuality: 100, aspectRatioPresets: [
-          CropAspectRatioPreset.square,
-        ]);
+        File tempFile = File(tempImage.path);
+        String fileName = tempFile.path.split('/').last;
+        var image = imageLib.decodeImage(tempFile.readAsBytesSync());
+        Map imagefile = await Navigator.push(
+          context,
+          new MaterialPageRoute(
+            builder: (context) => new PhotoFilterSelector(
+              title: Text("Add Filters"),
+              image: image,
+              appBarColor: Colors.black,
+              filters: presetFiltersList,
+              filename: fileName,
+              loader: Center(child: CircularProgressIndicator()),
+              fit: BoxFit.contain,
+            ),
+          ),
+        );
+
+        if (imagefile != null && imagefile.containsKey('image_filtered')) {
+          tempFile = imagefile['image_filtered'];
+        }
+
+        File croppedFile = await ImageCropper.cropImage(
+          androidUiSettings: AndroidUiSettings(
+            toolbarTitle: 'Cropper',
+            toolbarColor: Colors.black,
+            toolbarWidgetColor: Colors.white,
+            backgroundColor: Colors.black,
+            activeControlsWidgetColor: Colors.blue,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+          ),
+          sourcePath: tempFile.path,
+          compressQuality: 100,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.square,
+          ],
+        );
+
         if (this.mounted)
           setState(() {
             postImage = croppedFile;
           });
         return;
       }
-      SnackBar snackBar = SnackBar(content: Text('The selected image contains faces which are not allowed'));
+      SnackBar snackBar = SnackBar(
+        content: Text('The selected image contains faces which are not allowed'),
+      );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
   // select existing picture from gallery
-  galleryPhoto() async {
+  galleryPhoto(BuildContext context) async {
     var imagePicker = ImagePicker();
-    PickedFile tempImage =
-        await imagePicker.getImage(source: ImageSource.gallery, maxHeight: 700, maxWidth: 900, imageQuality: 100);
-    if (tempImage.path != null) {
+    PickedFile tempImage = await imagePicker.getImage(
+      source: ImageSource.gallery,
+      maxHeight: 700,
+      maxWidth: 900,
+      imageQuality: 100,
+    );
+
+    if (tempImage != null) {
       final image = FirebaseVisionImage.fromFilePath(tempImage.path);
       final faceDector = FirebaseVision.instance.faceDetector(
         FaceDetectorOptions(mode: FaceDetectorMode.accurate),
@@ -80,9 +128,45 @@ class _UploadPageState extends State<UploadPage> {
 
       final result = await faceDector.processImage(image);
       if (result.isEmpty) {
-        File croppedFile = await ImageCropper.cropImage(sourcePath: tempImage.path, compressQuality: 100, aspectRatioPresets: [
-          CropAspectRatioPreset.square,
-        ]);
+        File tempFile = File(tempImage.path);
+        String fileName = tempFile.path.split('/').last;
+        var image = imageLib.decodeImage(tempFile.readAsBytesSync());
+        Map imagefile = await Navigator.push(
+          context,
+          new MaterialPageRoute(
+            builder: (context) => new PhotoFilterSelector(
+              title: Text("Add Filters"),
+              image: image,
+              appBarColor: Colors.black,
+              filters: presetFiltersList,
+              filename: fileName,
+              loader: Center(child: CircularProgressIndicator()),
+              fit: BoxFit.contain,
+            ),
+          ),
+        );
+
+        if (imagefile != null && imagefile.containsKey('image_filtered')) {
+          tempFile = imagefile['image_filtered'];
+        }
+
+        File croppedFile = await ImageCropper.cropImage(
+          androidUiSettings: AndroidUiSettings(
+            toolbarTitle: 'Cropper',
+            toolbarColor: Colors.black,
+            toolbarWidgetColor: Colors.white,
+            backgroundColor: Colors.black,
+            activeControlsWidgetColor: Colors.blue,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+          ),
+          sourcePath: tempFile.path,
+          compressQuality: 100,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.square,
+          ],
+        );
+
         if (this.mounted)
           setState(() {
             postImage = croppedFile;
@@ -105,8 +189,8 @@ class _UploadPageState extends State<UploadPage> {
   compressImage() async {
     final tempDirectory = await getTemporaryDirectory();
     final path = tempDirectory.path;
-    image.Image tempImageFile = image.decodeImage(postImage.readAsBytesSync());
-    final compressedImageFile = File('$path/img_$postID.jpg')..writeAsBytesSync(image.encodeJpg(tempImageFile, quality: 85));
+    imageLib.Image tempImageFile = imageLib.decodeImage(postImage.readAsBytesSync());
+    final compressedImageFile = File('$path/img_$postID.jpg')..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
     setState(() => postImage = compressedImageFile);
   }
 
@@ -187,13 +271,19 @@ class _UploadPageState extends State<UploadPage> {
                     setState(() => isUploading = true);
                     await compressImage();
                     String postUrl = await uploadPost(postImage);
-                    postToFireStore(postUrl, captionController.text, locationController.text);
+                    postToFireStore(
+                      postUrl,
+                      captionController.text,
+                      locationController.text,
+                    );
                     captionController.clear();
-                    setState(() {
-                      postImage = null;
-                      isUploading = false;
-                      postID = Uuid().v4();
-                    });
+                    setState(
+                      () {
+                        postImage = null;
+                        isUploading = false;
+                        postID = Uuid().v4();
+                      },
+                    );
                   },
             child: Text(
               "Post",
@@ -344,7 +434,7 @@ class _UploadPageState extends State<UploadPage> {
                     //border:
                   ),
                   child: TextButton(
-                    onPressed: () => galleryPhoto(),
+                    onPressed: () => galleryPhoto(context),
                     child: Text(
                       "From Gallery",
                       style: TextStyle(

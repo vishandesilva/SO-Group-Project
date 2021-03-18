@@ -15,7 +15,7 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
   // controller for the textfield
   TextEditingController textEditingController = TextEditingController();
   // place holder for user profiles to display on search screen
-  Future<QuerySnapshot> searchResults;
+  Stream<QuerySnapshot> searchResults;
   // keeps state alive when user switches screens
   bool get wantKeepAlive => true;
 
@@ -68,8 +68,8 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
 
   // builds the results from query to dispplay
   foundSearchResults() {
-    return FutureBuilder(
-        future: searchResults,
+    return StreamBuilder(
+        stream: searchResults,
         builder: (context, currentSnapshot) {
           if (!currentSnapshot.hasData) {
             return circularProgress();
@@ -106,7 +106,8 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
 
   // query the database for usernames on submission in textfield
   performSearch(String searchName) {
-    Future<QuerySnapshot> allUsers = userReference.where('profileName', isGreaterThanOrEqualTo: searchName).get();
+    Stream<QuerySnapshot> allUsers =
+        userReference.where('profileName', isGreaterThanOrEqualTo: searchName.toLowerCase()).get().asStream();
     if (this.mounted) setState(() => searchResults = allUsers);
   }
 }

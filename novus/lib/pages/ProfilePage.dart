@@ -146,80 +146,82 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             )
           : null,
-      body: ListView(
-        children: [
-          StreamBuilder(
-            stream: userReference.doc(widget.userid).snapshots(),
-            builder: (context, currentSnapshot) {
-              if (!currentSnapshot.hasData) return circularProgress();
-              User user = User.fromDocument(currentSnapshot.data);
-              return Padding(
-                padding: EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0, bottom: 3.0),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 40,
-                          backgroundImage: CachedNetworkImageProvider(user.url),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      body: isLoading
+          ? circularProgress()
+          : ListView(
+              children: [
+                StreamBuilder(
+                  stream: userReference.doc(widget.userid).snapshots(),
+                  builder: (context, currentSnapshot) {
+                    if (!currentSnapshot.hasData) return circularProgress();
+                    User user = User.fromDocument(currentSnapshot.data);
+                    return Padding(
+                      padding: EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0, bottom: 3.0),
+                      child: Column(
+                        children: [
+                          Row(
                             children: [
-                              buildCountStats("Posts", postCount),
-                              buildCountStats("Followers", followersCount),
-                              buildCountStats("Following", followingCount),
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundImage: CachedNetworkImageProvider(user.url),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    buildCountStats("Posts", postCount),
+                                    buildCountStats("Followers", followersCount),
+                                    buildCountStats("Following", followingCount),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      alignment: Alignment.centerLeft,
-                      padding: EdgeInsets.only(top: 15.0, left: 13),
-                      child: Text(
-                        user.userName,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0, color: Colors.white),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.only(top: 15.0, left: 13),
+                            child: Text(
+                              user.userName,
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0, color: Colors.white),
+                            ),
+                          ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.only(top: 4.0, left: 13),
+                            child: Text(
+                              user.profileName,
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.only(top: 2.0, left: 13),
+                            child: Text(
+                              user.bio,
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [currentUserId != widget.userid ? buildFollowOrUnfollow() : Container()],
+                          ),
+                        ],
                       ),
-                    ),
-                    Container(
-                      alignment: Alignment.centerLeft,
-                      padding: EdgeInsets.only(top: 4.0, left: 13),
-                      child: Text(
-                        user.profileName,
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ),
-                    Container(
-                      alignment: Alignment.centerLeft,
-                      padding: EdgeInsets.only(top: 2.0, left: 13),
-                      child: Text(
-                        user.bio,
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [currentUserId != widget.userid ? buildFollowOrUnfollow() : Container()],
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 10.0, bottom: 2.0),
-            child: Divider(
-              height: 0.0,
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0, bottom: 2.0),
+                  child: Divider(
+                    height: 0.0,
+                  ),
+                ),
+                tilesView(),
+                //TODO potentially add toggle between listview and tileview
+                //Column(children: posts)
+              ],
             ),
-          ),
-          isLoading ? circularProgress() : tilesView(),
-          //TODO potentially add toggle between listview and tileview
-          //Column(children: posts)
-        ],
-      ),
     );
   }
 

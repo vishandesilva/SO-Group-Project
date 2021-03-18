@@ -119,10 +119,31 @@ class _PostState extends State<Post> {
                 location,
                 style: TextStyle(color: Colors.white),
               ),
-              trailing: IconButton(
-                icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color),
-                onPressed: () => null,
-              ),
+              trailing: userId == ownerId
+                  ? IconButton(
+                      icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color),
+                      onPressed: () => showDialog(
+                        context: context,
+                        builder: (context) {
+                          return SimpleDialog(
+                            title: Text("Actions"),
+                            children: <Widget>[
+                              SimpleDialogOption(
+                                  child: Text("Delete Post"),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    deletePost();
+                                  }),
+                              SimpleDialogOption(
+                                child: Text("Cancel"),
+                                onPressed: () => Navigator.pop(context),
+                              )
+                            ],
+                          );
+                        },
+                      ),
+                    )
+                  : null,
             );
           },
         ),
@@ -315,5 +336,31 @@ class _PostState extends State<Post> {
         ),
       ),
     );
+  }
+
+  deletePost() async {
+    postReference
+        .doc(ownerId)
+        .collection('userPosts')
+        .doc(postId)
+        .get()
+        .then((value) => value.exists ? value.reference.delete() : null);
+
+    storageReference.child("posts").child("post_$postId.jpg").delete();
+
+    QuerySnapshot deletingNotifications =
+        await notificationsReference.doc(ownerId).collection("notificationItems").where('postId', isEqualTo: postId).get();
+    deletingNotifications.docs.forEach((element) {
+      if (element.exists) {
+        element.reference.delete();
+      }
+    });
+
+    QuerySnapshot deletingComments = await commentsReference.doc(postId).collection('comments').get();
+    deletingComments.docs.forEach((element) {
+      if (element.exists) {
+        element.reference.delete();
+      }
+    });
   }
 }

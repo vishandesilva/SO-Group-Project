@@ -13,18 +13,19 @@ class PostScreenPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: postReference.doc(userId).collection('userPosts').doc(postId).get(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return circularProgress();
-          Post post = Post.fromDocument(snapshot.data);
-          return Center(
-            child: Scaffold(
-              appBar: header(context, title: "Post"),
-              body: ListView(
-                children: [post],
-              ),
+      future: postReference.doc(userId).collection('userPosts').doc(postId).get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return circularProgress();
+        Post post = Post.fromDocument(snapshot.data);
+        return Center(
+          child: Scaffold(
+            appBar: header(context, title: "Post"),
+            body: ListView(
+              children: [post],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }

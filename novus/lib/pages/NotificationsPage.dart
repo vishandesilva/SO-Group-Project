@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/PostScreenPage.dart';
@@ -34,12 +35,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
 }
 
 getUserNotifications() async {
-  QuerySnapshot snapshot = await notificationsReference
-      .doc(user.id)
-      .collection('notificationItems')
-      .orderBy('timestamp', descending: true)
-      .limit(25)
-      .get();
+  QuerySnapshot snapshot =
+      await notificationsReference.doc(user.id).collection('notificationItems').orderBy('timestamp', descending: true).get();
   List<NotificationsItem> notificationItems = [];
   snapshot.docs.forEach((element) {
     notificationItems.add(NotificationsItem.fromDocument(element));
@@ -123,22 +120,20 @@ class NotificationsItem extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.all(1.0),
       child: ListTile(
-        title: GestureDetector(
-          onTap: () => showProfile(context),
-          child: RichText(
-            overflow: TextOverflow.ellipsis,
-            text: TextSpan(
-              style: TextStyle(fontSize: 14.0, color: Colors.white),
-              children: [
-                TextSpan(
-                  text: username,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(
-                  text: ' $notificationText',
-                ),
-              ],
-            ),
+        title: RichText(
+          overflow: TextOverflow.ellipsis,
+          text: TextSpan(
+            style: TextStyle(fontSize: 14.0, color: Colors.white),
+            children: [
+              TextSpan(
+                text: username,
+                style: TextStyle(fontWeight: FontWeight.bold),
+                recognizer: TapGestureRecognizer()..onTap = () => showProfile(context),
+              ),
+              TextSpan(
+                text: ' $notificationText',
+              ),
+            ],
           ),
         ),
         leading: CircleAvatar(

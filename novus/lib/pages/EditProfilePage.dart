@@ -159,7 +159,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _profileName = true;
         }
 
-        if (bioController.text.trim().length > 90) {
+        if (bioController.text.trim().length > 150) {
           _bioValid = false;
         } else {
           _bioValid = true;

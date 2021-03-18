@@ -13,14 +13,17 @@ class PostTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => showPost(context),
-      child: CachedNetworkImage(
-        imageUrl: post.posturl,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Padding(
-          padding: EdgeInsets.all(10.0),
-          child: circularProgress(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: CachedNetworkImage(
+          imageUrl: post.posturl,
+          fit: BoxFit.contain,
+          placeholder: (context, url) => Padding(
+            padding: EdgeInsets.all(10.0),
+            child: circularProgress(),
+          ),
+          errorWidget: (context, url, error) => Icon(Icons.error_outline),
         ),
-        errorWidget: (context, url, error) => Icon(Icons.error_outline),
       ),
     );
   }

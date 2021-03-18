@@ -21,12 +21,13 @@ class _TimeLinePageState extends State<TimeLinePage> {
   @override
   Widget build(context) {
     return Scaffold(
-      appBar: header(context, appTitle: true),
+      appBar: header(context, appTitle: true, enableActionButton: true),
       body: RefreshIndicator(
         onRefresh: () => getPosts(),
         child: posts == null
             ? circularProgress()
             : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: posts,
               ),
       ),

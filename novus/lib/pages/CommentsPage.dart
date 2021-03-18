@@ -1,11 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/widgets/HeaderWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'ProfilePage.dart';
 
 class CommentsPage extends StatefulWidget {
   final String postId;
@@ -42,22 +44,27 @@ class CommentsPageState extends State<CommentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: header(context, title: "Comments"),
-      body: Column(
-        children: [
-          Expanded(
+      body: GestureDetector(
+        onTap: () => WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
+        child: Column(
+          children: [
+            Expanded(
               child: StreamBuilder(
-            stream: commentsReference.doc(postId).collection('comments').orderBy('timestamp', descending: false).snapshots(),
-            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-              if (!snapshot.hasData) return circularProgress();
-              List<Comment> comments = [];
-              snapshot.data.docs.forEach((element) {
-                comments.add(Comment.fromDocument(element));
-              });
-              return ListView(children: comments);
-            },
-          )),
-          Divider(),
-          ListTile(
+                stream: commentsReference.doc(postId).collection('comments').orderBy('timestamp', descending: false).snapshots(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (!snapshot.hasData) return circularProgress();
+                  List<Comment> comments = [];
+                  snapshot.data.docs.forEach(
+                    (element) {
+                      comments.add(Comment.fromDocument(element));
+                    },
+                  );
+                  return ListView(children: comments);
+                },
+              ),
+            ),
+            Divider(),
+            ListTile(
               title: TextFormField(
                 style: TextStyle(color: Colors.white),
                 controller: textEditingController,
@@ -71,8 +78,10 @@ class CommentsPageState extends State<CommentsPage> {
                   'Post',
                   style: TextStyle(color: Theme.of(context).accentColor, fontSize: 20.0),
                 ),
-              ))
-        ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -132,25 +141,70 @@ class Comment extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 7.0),
-          child: ListTile(
-            title: Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Text(
-                comment,
-                style: TextStyle(color: Colors.white),
+          padding: const EdgeInsets.only(bottom: 1.0),
+          child: GestureDetector(
+            onLongPress: () => userId == user.id
+                ? showDialog(
+                    context: context,
+                    builder: (context) {
+                      return SimpleDialog(
+                        children: <Widget>[
+                          SimpleDialogOption(
+                              child: Text("Delete Comment"),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                deleteComment();
+                              }),
+                          SimpleDialogOption(
+                            child: Text("Cancel"),
+                            onPressed: () => Navigator.pop(context),
+                          )
+                        ],
+                      );
+                    },
+                  )
+                : null,
+            child: ListTile(
+              title: RichText(
+                overflow: TextOverflow.visible,
+                text: TextSpan(
+                  style: TextStyle(fontSize: 15.0, color: Colors.white),
+                  children: [
+                    TextSpan(
+                      text: username,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                      recognizer: TapGestureRecognizer()..onTap = () => showProfile(context),
+                    ),
+                    TextSpan(
+                      text: ' $comment',
+                    ),
+                  ],
+                ),
               ),
-            ),
-            subtitle: Text(
-              timeago.format(timestamp.toDate()),
-              style: TextStyle(color: Colors.grey, fontSize: 11.0),
-            ),
-            leading: CircleAvatar(
-              backgroundImage: CachedNetworkImageProvider(profileUrl),
+              subtitle: Text(
+                timeago.format(timestamp.toDate()),
+                style: TextStyle(color: Colors.grey, fontSize: 11.0),
+              ),
+              leading: CircleAvatar(
+                backgroundImage: CachedNetworkImageProvider(profileUrl),
+              ),
             ),
           ),
         ),
       ],
     );
   }
+
+  showProfile(context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfilePage(
+          userid: userId,
+        ),
+      ),
+    );
+  }
+
+  deleteComment() {}
 }
