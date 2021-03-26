@@ -20,7 +20,9 @@ import 'HomePage.dart';
 
 class UploadPage extends StatefulWidget {
   final User userUpload;
-  UploadPage({this.userUpload});
+  final bool contestUpload;
+  final String contestId;
+  UploadPage({this.userUpload, this.contestUpload = false, this.contestId});
 
   @override
   _UploadPageState createState() => _UploadPageState();
@@ -247,9 +249,9 @@ class _UploadPageState extends State<UploadPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Add Caption",
+          "New Post",
           style: TextStyle(
-            color: Colors.purple,
+            color: Colors.white,
             fontSize: 25,
           ),
         ),
@@ -276,7 +278,17 @@ class _UploadPageState extends State<UploadPage> {
                       captionController.text,
                       locationController.text,
                     );
+                    if (widget.contestUpload) {
+                      await contestReference
+                          .doc(widget.contestId)
+                          .collection('partcipants')
+                          .doc(widget.userUpload.id)
+                          .collection('posts')
+                          .doc(postID)
+                          .set({});
+                    }
                     captionController.clear();
+                    locationController.clear();
                     setState(
                       () {
                         postImage = null;
@@ -318,7 +330,6 @@ class _UploadPageState extends State<UploadPage> {
                     ),
                   ),
                 ),
-                Divider(),
                 ListTile(
                   title: Container(
                     width: 300,
@@ -332,12 +343,12 @@ class _UploadPageState extends State<UploadPage> {
                             decoration: TextDecoration.none,
                           ),
                           decoration: InputDecoration(
-                            hintText: "Provide caption",
-                            hintStyle: TextStyle(color: Theme.of(context).hintColor),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
+                            hintText: "Write a caption",
+                            hintStyle: TextStyle(color: Colors.white38),
                           ),
+                        ),
+                        Divider(
+                          height: 0.01,
                         ),
                         TextField(
                           controller: locationController,
@@ -347,18 +358,15 @@ class _UploadPageState extends State<UploadPage> {
                             decoration: TextDecoration.none,
                           ),
                           decoration: InputDecoration(
-                            hintText: "Provide location",
-                            hintStyle: TextStyle(color: Theme.of(context).hintColor),
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
+                            hintText: "Add location",
+                            hintStyle: TextStyle(color: Colors.white38),
                           ),
+                        ),
+                        Divider(
+                          height: 0.01,
                         ),
                       ],
                     ),
-                  ),
-                  leading: CircleAvatar(
-                    backgroundImage: CachedNetworkImageProvider(user.url),
                   ),
                 ),
                 //TODO add google maps package to set location

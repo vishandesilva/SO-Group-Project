@@ -22,10 +22,12 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   TextEditingController profileNameController = TextEditingController();
   TextEditingController bioController = TextEditingController();
+  TextEditingController userNameController = TextEditingController();
   final GlobalKey _scaffoldKey = GlobalKey<ScaffoldState>();
   bool isLoading = false;
   bool _bioValid = true;
   bool _profileName = true;
+  bool _userName = true;
 
   @override
   void initState() {
@@ -39,6 +41,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     user = User.fromDocument(userSnapshot);
     profileNameController.text = user.profileName;
     bioController.text = user.bio;
+    userNameController.text = user.userName;
     setState(() => isLoading = false);
   }
 
@@ -102,7 +105,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             controller: profileNameController,
                             decoration: InputDecoration(
                               hintText: "New Profile Name",
+                              hintStyle: TextStyle(color: Colors.white38),
                               errorText: !_profileName ? "Name too Short" : null,
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                            ),
+                            cursorColor: Colors.white,
+                            style: TextStyle(
+                              color: Colors.white,
+                              decoration: TextDecoration.none,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(15.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Username",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          TextField(
+                            controller: userNameController,
+                            decoration: InputDecoration(
+                              hintText: "Your Username",
+                              hintStyle: TextStyle(color: Colors.white38),
+                              errorText: !_userName ? "Username is either too long or too short" : null,
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(color: Colors.white),
                               ),
@@ -129,6 +161,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             controller: bioController,
                             decoration: InputDecoration(
                               hintText: "About Yourself",
+                              hintStyle: TextStyle(color: Colors.white38),
                               errorText: !_bioValid ? "Bio is too long" : null,
                               enabledBorder: UnderlineInputBorder(
                                 borderSide: BorderSide(color: Colors.white),
@@ -159,6 +192,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _profileName = true;
         }
 
+        if (userNameController.text.trim().length > 13 ||
+            userNameController.text.trim().length < 4 ||
+            userNameController.text.isEmpty) {
+          _userName = false;
+        } else {
+          _userName = true;
+        }
+
         if (bioController.text.trim().length > 150) {
           _bioValid = false;
         } else {
@@ -167,10 +208,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
       },
     );
 
-    if (_profileName && _bioValid) {
+    if (_profileName && _bioValid && _userName) {
       userReference.doc(widget.userId).update({
         "profileName": profileNameController.text,
         "bio": bioController.text,
+        "userName": userNameController.text,
       });
 
       //FIXME get snackbar to work

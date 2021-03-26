@@ -106,8 +106,7 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
 
   // query the database for usernames on submission in textfield
   performSearch(String searchName) {
-    Stream<QuerySnapshot> allUsers =
-        userReference.where('profileName', isGreaterThanOrEqualTo: searchName.toLowerCase()).get().asStream();
+    Stream<QuerySnapshot> allUsers = userReference.where('profileName', isGreaterThanOrEqualTo: searchName).snapshots();
     if (this.mounted) setState(() => searchResults = allUsers);
   }
 }

@@ -6,11 +6,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/ContestPage.dart';
 import 'package:novus/pages/CreateAccountPage.dart';
+import 'package:novus/pages/NotificationsPage.dart';
 import 'package:novus/pages/ProfilePage.dart';
 import 'package:novus/pages/SearchPage.dart';
 import 'package:novus/pages/TimeLinePage.dart';
-import 'package:novus/pages/UploadPage.dart';
-import 'package:novus/widgets/ContestWidget.dart';
 
 // using Googles Authentication package to validate users on the application
 final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -19,6 +18,7 @@ final userReference = FirebaseFirestore.instance.collection("users");
 final postReference = FirebaseFirestore.instance.collection("posts");
 final commentsReference = FirebaseFirestore.instance.collection("comments");
 final notificationsReference = FirebaseFirestore.instance.collection("notifications");
+final contestReference = FirebaseFirestore.instance.collection("contests");
 // reference point to firbase storage consisting of all media files
 final Reference storageReference = FirebaseStorage.instance.ref();
 // place holder for the current user details
@@ -48,10 +48,10 @@ class _HomePageState extends State<HomePage> {
         children: [
           TimeLinePage(),
           SearchPage(),
-          UploadPage(
-            userUpload: user,
+          ContestsPage(
+            userId: user.id,
           ),
-          Contest(),
+          NotificationsPage(),
           ProfilePage(userid: user.id),
         ],
         controller: pageController,
@@ -62,8 +62,8 @@ class _HomePageState extends State<HomePage> {
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home)),
           BottomNavigationBarItem(icon: Icon(Icons.search)),
-          BottomNavigationBarItem(icon: Icon(Icons.photo_camera)),
           BottomNavigationBarItem(icon: Icon(Icons.emoji_events)),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications)),
           BottomNavigationBarItem(icon: Icon(Icons.person)),
         ],
         currentIndex: currentPageIndex,

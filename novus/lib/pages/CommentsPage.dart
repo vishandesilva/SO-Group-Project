@@ -33,6 +33,7 @@ class CommentsPageState extends State<CommentsPage> {
   final String ownerId;
   final String posturl;
   TextEditingController textEditingController = TextEditingController();
+  bool isEnabled = false;
 
   CommentsPageState({
     this.postId,
@@ -63,20 +64,30 @@ class CommentsPageState extends State<CommentsPage> {
                 },
               ),
             ),
-            Divider(),
+            Divider(
+              height: 0.01,
+            ),
             ListTile(
               title: TextFormField(
                 style: TextStyle(color: Colors.white),
+                onChanged: (value) {
+                  value.length > 0 ? setState(() => isEnabled = true) : setState(() => isEnabled = false);
+                },
                 controller: textEditingController,
                 decoration: InputDecoration(
-                  hintText: "comment",
+                  border: InputBorder.none,
+                  hintText: "Add a comment",
+                  hintStyle: TextStyle(color: Colors.white38),
                 ),
               ),
               trailing: TextButton(
-                onPressed: () => addComment(),
+                onPressed: () => isEnabled ? addComment() : null,
                 child: Text(
                   'Post',
-                  style: TextStyle(color: Theme.of(context).accentColor, fontSize: 20.0),
+                  style: TextStyle(
+                    color: isEnabled ? Theme.of(context).accentColor : Theme.of(context).accentColor.withAlpha(150),
+                    fontSize: 20.0,
+                  ),
                 ),
               ),
             )
@@ -88,13 +99,17 @@ class CommentsPageState extends State<CommentsPage> {
 
   addComment() {
     DateTime timestamp = DateTime.now();
-    commentsReference.doc(postId).collection('comments').add({
+    var df = commentsReference.doc(postId).collection('comments').doc();
+    commentsReference.doc(postId).collection('comments').doc(df.id).set({
       'username': user.userName,
       'comment': textEditingController.text,
+      'commentId': df.id,
+      'postId': postId,
       'profileUrl': user.url,
       'userId': user.id,
       'timestamp': timestamp,
     });
+
     if (user.id != ownerId) {
       notificationsReference.doc(ownerId).collection("notificationItems").add({
         "type": "comment",
@@ -116,23 +131,29 @@ class Comment extends StatelessWidget {
   final String comment;
   final String profileUrl;
   final String userId;
+  final String postId;
+  final String commentId;
   final Timestamp timestamp;
 
   Comment({
     this.username,
     this.comment,
+    this.commentId,
     this.profileUrl,
     this.userId,
+    this.postId,
     this.timestamp,
   });
 
   factory Comment.fromDocument(DocumentSnapshot doc) {
     return Comment(
-      username: doc['username'],
-      comment: doc['comment'],
-      profileUrl: doc['profileUrl'],
-      timestamp: doc['timestamp'],
-      userId: doc['userId'],
+      username: doc.data()['username'],
+      comment: doc.data()['comment'],
+      commentId: doc.data()['commentId'],
+      postId: doc.data()['postId'],
+      profileUrl: doc.data()['profileUrl'],
+      timestamp: doc.data()['timestamp'],
+      userId: doc.data()['userId'],
     );
   }
 
@@ -148,15 +169,71 @@ class Comment extends StatelessWidget {
                     context: context,
                     builder: (context) {
                       return SimpleDialog(
+                        contentPadding: EdgeInsets.all(0.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        backgroundColor: Colors.grey[900],
+                        title: Center(
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(5.0),
+                                child: Text(
+                                  "Delete this comment?",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 15.0, left: 20.0, right: 20.0),
+                                child: Text(
+                                  "This action will remove the comment from this post and cannot be undone.",
+                                  style: TextStyle(color: Colors.grey, fontWeight: FontWeight.normal, fontSize: 15.0),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         children: <Widget>[
+                          Container(
+                            height: 0.10,
+                            color: Colors.white,
+                          ),
                           SimpleDialogOption(
-                              child: Text("Delete Comment"),
-                              onPressed: () {
-                                Navigator.pop(context);
-                                deleteComment();
-                              }),
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(5.0),
+                                child: Text(
+                                  "Delete",
+                                  style: TextStyle(
+                                    color: Theme.of(context).accentColor,
+                                    fontSize: 17.0,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            onPressed: () {
+                              deleteComment();
+                              Navigator.pop(context);
+                            },
+                          ),
+                          Container(
+                            height: 0.10,
+                            color: Colors.white,
+                          ),
                           SimpleDialogOption(
-                            child: Text("Cancel"),
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(5.0),
+                                child: Text(
+                                  "Cancel",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17.0,
+                                  ),
+                                ),
+                              ),
+                            ),
                             onPressed: () => Navigator.pop(context),
                           )
                         ],
@@ -206,5 +283,7 @@ class Comment extends StatelessWidget {
     );
   }
 
-  deleteComment() {}
+  deleteComment() {
+    commentsReference.doc(postId).collection('comments').doc(commentId).delete();
+  }
 }

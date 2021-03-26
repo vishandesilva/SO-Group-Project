@@ -1,26 +1,50 @@
+import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_countdown_timer/current_remaining_time.dart';
+import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:novus/pages/HomePage.dart';
-import 'package:novus/pages/PostScreenPage.dart';
-import 'package:novus/pages/ProfilePage.dart';
-import 'package:novus/widgets/HeaderWidget.dart';
+import 'package:novus/pages/UploadPage.dart';
+import 'package:novus/pages/contestTImeline.dart';
 import 'package:novus/widgets/PostTileWidget.dart';
 import 'package:novus/widgets/PostWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
+List<UserTile> addUsers;
+
+// ignore: must_be_immutable
 class Contest extends StatefulWidget {
+  final String contestName;
+  final String contestId;
+  final String contestDescription;
+  final String hostUserId;
+  final int endDate;
+  bool contestEnd;
+  final List participants;
+
+  Contest({
+    this.contestName,
+    this.contestId,
+    this.contestEnd,
+    this.contestDescription,
+    this.participants,
+    this.hostUserId,
+    this.endDate,
+  });
+
   @override
   _ContestState createState() => _ContestState();
 }
 
 class _ContestState extends State<Contest> {
+  final TextEditingController contestNameController = TextEditingController();
+  final TextEditingController contestDesriptionController = TextEditingController();
   int postCount;
   bool isLoading = false;
   List<Post> posts;
+  bool lockPostButton = false;
 
   void initState() {
     super.initState();
@@ -30,30 +54,217 @@ class _ContestState extends State<Contest> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: header(context, title: "Contest"),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: Icon(
+            Icons.arrow_back_sharp,
+            color: Theme.of(context).accentColor,
+          ),
+        ),
+        title: Text(
+          "Topic: " + widget.contestName,
+          style: TextStyle(
+            color: Colors.purple,
+            fontSize: 25.0,
+          ),
+        ),
+        iconTheme: Theme.of(context).iconTheme,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        brightness: Brightness.dark,
+      ),
+      endDrawer: widget.hostUserId == user.id
+          ? new BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 0.5,
+                sigmaY: 0.5,
+              ),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.55,
+                color: Colors.black,
+                child: Drawer(
+                  child: Container(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        Container(
+                          height: 100,
+                          child: DrawerHeader(
+                            padding: EdgeInsets.only(bottom: 5.0, top: 10.0, left: 17.0),
+                            child: Text(
+                              'Contest Actions',
+                              style: TextStyle(color: Colors.white, fontSize: 25),
+                            ),
+                          ),
+                        ),
+                        ListTile(
+                          leading: Icon(
+                            Icons.settings,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          title: Text(
+                            'Settings',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onTap: () => contestSettingsForm(),
+                        ),
+                        ListTile(
+                          leading: Icon(
+                            Icons.person_add,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          title: Text(
+                            'Add participants',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onTap: () => addParticipants(),
+                        ),
+                        ListTile(
+                          leading: Icon(
+                            Icons.event_busy_outlined,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          title: Text(
+                            'End contest',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onTap: () => null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
       body: isLoading
           ? circularProgress()
           : Padding(
               padding: const EdgeInsets.only(left: 10.0, right: 10.0, bottom: 8.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        child: Text(
-                          "Topic: Beaches",
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30.0),
-                        ),
+                  Container(
+                    padding: EdgeInsets.only(top: 5.0, bottom: 10.0),
+                    child: Text(
+                      "Description: " + widget.contestDescription,
+                      style: TextStyle(color: Colors.white, fontSize: 15.0),
+                    ),
+                  ),
+                  Container(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        top: 8.0,
+                        bottom: 8.0,
                       ),
-                      Container(
-                        padding: EdgeInsets.only(top: 5.0, bottom: 20.0),
-                        child: Text(
-                          "Its summer time, get yourself outside and take pictures of the best beach spots that you can find. Good luck and have fun!",
-                          style: TextStyle(color: Colors.white),
-                        ),
+                      child: CountdownTimer(
+                        textStyle: TextStyle(color: Colors.white),
+                        endTime: widget.endDate,
+                        widgetBuilder: (context, CurrentRemainingTime time) {
+                          if (time == null) {
+                            return TextButton(
+                                child: Text("View results"),
+                                onPressed: () {
+                                  setState(() {
+                                    lockPostButton = true;
+                                  });
+                                  return showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return SimpleDialog(
+                                        contentPadding: EdgeInsets.all(0.0),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20.0),
+                                        ),
+                                        backgroundColor: Colors.grey[900],
+                                        title: Center(
+                                          child: Column(
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.all(5.0),
+                                                child: Text(
+                                                  "Achievements",
+                                                  style: TextStyle(color: Colors.white),
+                                                ),
+                                              ),
+                                              Center(
+                                                child: Container(
+                                                  width: double.maxFinite,
+                                                  height: 100,
+                                                  child: FutureBuilder(
+                                                    future: getResult(),
+                                                    builder: (context, snapshot) {
+                                                      if (!snapshot.hasData) return circularProgress();
+                                                      return Container(
+                                                        child: ListView(
+                                                          shrinkWrap: true,
+                                                          children: snapshot.data,
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        children: <Widget>[
+                                          Container(
+                                            height: 0.10,
+                                            color: Colors.white,
+                                          ),
+                                          SimpleDialogOption(
+                                            child: Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(5.0),
+                                                child: Text(
+                                                  "Add to profile",
+                                                  style: TextStyle(
+                                                    color: Theme.of(context).accentColor,
+                                                    fontSize: 17.0,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                          Container(
+                                            height: 0.10,
+                                            color: Colors.white,
+                                          ),
+                                          SimpleDialogOption(
+                                            child: Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(5.0),
+                                                child: Text(
+                                                  "Back",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 17.0,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                });
+                          }
+                          return Text(
+                            'Time left: Days: ${time.days == null ? '0' : time.days}, Hours: ${time.hours == null ? '0' : time.hours}, Min: ${time.min == null ? '0' : time.min}',
+                            style: TextStyle(color: Colors.white),
+                          );
+                        },
                       ),
-                    ],
+                    ),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -63,9 +274,23 @@ class _ContestState extends State<Contest> {
                         style: TextStyle(color: Colors.white, fontSize: 20.0),
                       ),
                       GestureDetector(
+                        onTap: () => !lockPostButton
+                            ? Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => UploadPage(
+                                    contestId: widget.contestId,
+                                    contestUpload: true,
+                                    userUpload: user,
+                                  ),
+                                ),
+                              )
+                            : null,
                         child: Text(
                           "Post",
-                          style: TextStyle(color: Colors.blue, fontSize: 20.0),
+                          style: TextStyle(
+                            color: lockPostButton ? Colors.blue.withAlpha(150) : Colors.blue,
+                            fontSize: 20.0,
+                          ),
                         ),
                       )
                     ],
@@ -90,13 +315,9 @@ class _ContestState extends State<Contest> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
-                    child: Row(
-                      children: [
-                        Text(
-                          "Contest Leaderboard",
-                          style: TextStyle(color: Colors.white, fontSize: 25.0),
-                        ),
-                      ],
+                    child: Text(
+                      "Leaderboard",
+                      style: TextStyle(color: Colors.white, fontSize: 20.0),
                     ),
                   ),
                   Expanded(
@@ -109,11 +330,10 @@ class _ContestState extends State<Contest> {
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: FutureBuilder(
-                        future: getUserNotifications(),
+                        future: getLeaderboard(),
                         builder: (context, snapshot) {
                           if (!snapshot.hasData) return circularProgress();
                           return ListView(
-                            shrinkWrap: true,
                             children: snapshot.data,
                           );
                         },
@@ -126,34 +346,195 @@ class _ContestState extends State<Contest> {
     );
   }
 
+  contestSettingsForm() {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        bool _contestName = true;
+        contestDesriptionController.text = widget.contestDescription;
+        contestNameController.text = widget.contestName;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SimpleDialog(
+              contentPadding: EdgeInsets.all(0.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              backgroundColor: Colors.grey[900],
+              title: Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Container(
+                  width: double.maxFinite,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          "Contest Details",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: contestNameController,
+                          decoration: InputDecoration(
+                            labelText: "Title",
+                            labelStyle: TextStyle(color: Colors.white),
+                            hintText: "Provide a name",
+                            hintStyle: TextStyle(color: Colors.white38),
+                            errorText: !_contestName ? "name required" : null,
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                          ),
+                          cursorColor: Colors.white,
+                          style: TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: contestDesriptionController,
+                          decoration: InputDecoration(
+                            labelText: "Description",
+                            labelStyle: TextStyle(color: Colors.white),
+                            hintText: "About your contest",
+                            hintStyle: TextStyle(color: Colors.white38),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                          ),
+                          cursorColor: Colors.white,
+                          style: TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              children: <Widget>[
+                Container(
+                  height: 0.10,
+                  color: Colors.white,
+                ),
+                SimpleDialogOption(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Text(
+                        "Accept changes",
+                        style: TextStyle(
+                          color: Theme.of(context).accentColor,
+                          fontSize: 17.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    setState(
+                      () {
+                        if (contestNameController.text.isEmpty) {
+                          _contestName = false;
+                        } else {
+                          _contestName = true;
+                        }
+                      },
+                    );
+
+                    if (_contestName) {
+                      contestReference.doc(widget.contestId).update({
+                        'contestName': contestNameController.text,
+                        'description': contestDesriptionController.text,
+                      });
+                      contestNameController.clear();
+                      contestDesriptionController.clear();
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+                Container(
+                  height: 0.10,
+                  color: Colors.white,
+                ),
+                SimpleDialogOption(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Text(
+                        "Cancel",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    contestNameController.clear();
+                    contestDesriptionController.clear();
+                    Navigator.pop(context);
+                  },
+                )
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   getContestPosts() async {
     if (this.mounted) {
       setState(() => isLoading = true);
     }
 
-    QuerySnapshot snapshot =
-        await postReference.doc(user.id).collection('userPosts').orderBy('timestamp', descending: true).get();
+    QuerySnapshot snapshot2 =
+        await contestReference.doc(widget.contestId).collection('partcipants').doc(user.id).collection('posts').get();
+
+    List<String> tempIDs = [];
+    List<Post> tempPosts = [];
+    snapshot2.docs.forEach(
+      (element) {
+        tempIDs.add(element.id);
+      },
+    );
+
+    for (var i = 0; i < tempIDs.length; i++) {
+      DocumentSnapshot snapshot = await postReference.doc(user.id).collection('userPosts').doc(tempIDs[i]).get();
+      tempPosts.add(Post.fromDocument(snapshot));
+    }
 
     if (this.mounted)
-      setState(() {
-        isLoading = false;
-        postCount = snapshot.docs.length;
-        posts = snapshot.docs.map((e) => Post.fromDocument(e)).toList();
-      });
+      setState(
+        () {
+          isLoading = false;
+          postCount = tempPosts.length;
+          if (postCount == 3) lockPostButton = true;
+          posts = tempPosts;
+        },
+      );
   }
 
   tilesView() {
     if (posts.isEmpty) {
       return Container(
-        padding: EdgeInsets.symmetric(vertical: 200),
+        padding: EdgeInsets.all(45.0),
         child: Center(
           child: Text(
-            'Upload Photos',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 40),
+            'Post a picture',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 25),
           ),
         ),
       );
     }
+
     List<GridTile> gridTiles = [];
     posts.forEach((element) {
       gridTiles.add(
@@ -164,6 +545,7 @@ class _ContestState extends State<Contest> {
         ),
       );
     });
+
     return GridView.count(
       children: gridTiles,
       crossAxisSpacing: 2.0,
@@ -175,144 +557,355 @@ class _ContestState extends State<Contest> {
     );
   }
 
-  //TODO add uploading photos logic for contests
-  uploadContestPhoto() {}
-}
+  int getScore(List<Post> postList) {
+    int score = 0;
+    for (var i = 0; i < postList.length; i++) {
+      score = score + postList[i].votes.length;
+    }
+    return score;
+  }
 
-getUserNotifications() async {
-  QuerySnapshot snapshot =
-      await notificationsReference.doc(user.id).collection('notificationItems').orderBy('timestamp', descending: true).get();
-  List<NotificationsItem> notificationItems = [];
-  snapshot.docs.forEach((element) {
-    notificationItems.add(NotificationsItem.fromDocument(element));
-  });
-  return notificationItems;
-}
+  getLeaderboard() async {
+    List<LeaderboardTile> leaderBoardTiles = [];
+    for (var i = 0; i < widget.participants.length; i++) {
+      DocumentSnapshot userFollowingIds = await userReference.doc(widget.participants[i]).get();
 
-Widget mediaType;
-String notificationText;
+      QuerySnapshot snapshot2 = await contestReference
+          .doc(widget.contestId)
+          .collection('partcipants')
+          .doc(widget.participants[i])
+          .collection('posts')
+          .get();
 
-class NotificationsItem extends StatelessWidget {
-  final String username;
-  final String userId;
-  final String type;
-  final String photoUrl;
-  final String postId;
-  final String postUrl;
-  final String commentData;
-  final Timestamp timestamp;
+      List<String> tempIDs = [];
+      List<Post> tempPosts = [];
+      if (snapshot2.docs.isNotEmpty) {
+        snapshot2.docs.forEach((element) {
+          tempIDs.add(element.id);
+        });
 
-  NotificationsItem({
-    this.username,
-    this.userId,
-    this.type,
-    this.photoUrl,
-    this.postId,
-    this.postUrl,
-    this.commentData,
-    this.timestamp,
-  });
+        for (var i = 0; i < tempIDs.length; i++) {
+          DocumentSnapshot snapshot = await postReference.doc(user.id).collection('userPosts').doc(tempIDs[i]).get();
+          tempPosts.add(Post.fromDocument(snapshot));
+        }
+      }
 
-  factory NotificationsItem.fromDocument(DocumentSnapshot doc) {
-    return NotificationsItem(
-      username: doc.data()['username'],
-      userId: doc['userId'],
-      type: doc.data()['type'],
-      postId: doc.data()['postId'],
-      postUrl: doc.data()['postUrl'],
-      photoUrl: doc.data()['photoUrl'],
-      commentData: doc.data()['commentData'],
-      timestamp: doc.data()['timestamp'],
+      leaderBoardTiles.add(LeaderboardTile.fromDocument(userFollowingIds, getScore(tempPosts), widget.contestId));
+    }
+
+    leaderBoardTiles.sort((a, b) => b.score.compareTo(a.score));
+
+    for (var i = 0; i < leaderBoardTiles.length; i++) {
+      leaderBoardTiles[i].rank = i + 1;
+    }
+    return leaderBoardTiles;
+  }
+
+  addParticipants() {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          contentPadding: EdgeInsets.all(0.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          backgroundColor: Colors.grey[900],
+          title: Center(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(
+                    "Add someone you follow",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                Container(
+                  height: 400,
+                  width: double.maxFinite,
+                  child: FutureBuilder(
+                    future: userTiles(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return circularProgress();
+
+                      return Container(
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: snapshot.data,
+                        ),
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
+          ),
+          children: <Widget>[
+            Container(
+              height: 0.10,
+              color: Colors.white,
+            ),
+            SimpleDialogOption(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(
+                    "Add",
+                    style: TextStyle(
+                      color: Theme.of(context).accentColor,
+                      fontSize: 17.0,
+                    ),
+                  ),
+                ),
+              ),
+              onPressed: () {
+                addUsers.forEach((element) {
+                  if (element.selected) {
+                    contestReference.doc(widget.contestId).update({
+                      'participants': FieldValue.arrayUnion([element.userId])
+                    });
+                  }
+                });
+                addUsers.clear();
+                Navigator.pop(context);
+              },
+            ),
+            Container(
+              height: 0.10,
+              color: Colors.white,
+            ),
+            SimpleDialogOption(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17.0,
+                    ),
+                  ),
+                ),
+              ),
+              onPressed: () => Navigator.pop(context),
+            )
+          ],
+        );
+      },
     );
   }
 
-  setupMediaPreview(context) {
-    if (type == 'vote' || type == 'comment') {
-      mediaType = GestureDetector(
-        onTap: () => showPost(context),
-        child: Container(
-          height: 50,
-          width: 50,
-          child: AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: CachedNetworkImageProvider(postUrl),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    } else
-      mediaType = Text('');
+  userTiles() async {
+    List<String> tempIDs = [];
+    List<UserTile> comments = [];
+    QuerySnapshot usersfollowing = await userReference.doc(user.id).collection('following').get();
 
-    if (type == 'vote')
-      notificationText = "voted on your post";
-    else if (type == 'follow')
-      notificationText = "is following you";
-    else if (type == 'comment')
-      notificationText = "replied $commentData";
-    else
-      notificationText = "err";
+    usersfollowing.docs.forEach((element) {
+      tempIDs.add(element.id);
+    });
+
+    for (var i = 0; i < tempIDs.length; i++) {
+      if (!widget.participants.contains(tempIDs[i])) {
+        DocumentSnapshot usersfoll = await userReference.doc(tempIDs[i]).get();
+        comments.add(UserTile.fromDocument(usersfoll));
+      }
+    }
+    addUsers = comments;
+    return comments;
+  }
+
+  getResult() async {
+    List<LeaderboardTile> leaderboard = await getLeaderboard();
+    return [leaderboard[leaderboard.indexWhere((element) => element.userid == user.id)]];
+  }
+
+  int getTime() {
+    var today = DateTime.now();
+    var fiftyDaysFromNow = today.add(const Duration(days: 4));
+    int dateTimeCreatedAt = fiftyDaysFromNow.millisecondsSinceEpoch;
+    return dateTimeCreatedAt;
+  }
+}
+
+// ignore: must_be_immutable
+class LeaderboardTile extends StatelessWidget {
+  final String contestName;
+  final String userid;
+  final String contestId;
+  final String contestDescription;
+  final List<Post> postList;
+  final String hostUserId;
+  final String profileName;
+  final String profileUrl;
+  final List participants;
+  int rank;
+  final int score;
+
+  LeaderboardTile({
+    this.userid,
+    this.contestName,
+    this.contestId,
+    this.profileName,
+    this.profileUrl,
+    this.postList,
+    this.contestDescription,
+    this.participants,
+    this.hostUserId,
+    this.rank,
+    this.score,
+  });
+
+  factory LeaderboardTile.fromDocument(DocumentSnapshot doc, int score, String contestId) {
+    return LeaderboardTile(
+      profileName: doc.data()['profileName'],
+      profileUrl: doc.data()['photoUrl'],
+      contestId: contestId,
+      contestName: doc.data()['contestName'],
+      userid: doc.data()['id'],
+      score: score,
+      contestDescription: doc.data()['description'],
+      participants: doc.data()['participants'],
+      hostUserId: doc.data()['hostUserId'],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    setupMediaPreview(context);
-    return Padding(
-      padding: EdgeInsets.all(1.0),
-      child: ListTile(
-        title: RichText(
-          overflow: TextOverflow.ellipsis,
-          text: TextSpan(
-            style: TextStyle(fontSize: 14.0, color: Colors.white),
-            children: [
-              TextSpan(
-                text: username,
-                style: TextStyle(fontWeight: FontWeight.bold),
-                recognizer: TapGestureRecognizer()..onTap = () => showProfile(context),
-              ),
-              TextSpan(
-                text: ' $notificationText',
-              ),
-            ],
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ContestTimeline(
+            userId: userid,
+            contestId: contestId,
+            profileName: profileName,
           ),
         ),
-        leading: CircleAvatar(
-          backgroundImage: CachedNetworkImageProvider(photoUrl),
+      ),
+      child: ListTile(
+        leading: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: Text(
+                "#" + rank.toString(),
+                style: TextStyle(
+                  color: rank == 1
+                      ? Colors.yellow
+                      : rank == 2
+                          ? Colors.grey[300]
+                          : rank == 3
+                              ? Colors.brown[700]
+                              : Colors.white,
+                  fontSize: 25.0,
+                ),
+              ),
+            ),
+            CircleAvatar(
+              backgroundImage: CachedNetworkImageProvider(profileUrl),
+            ),
+          ],
         ),
         subtitle: Text(
-          timeago.format(timestamp.toDate()),
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: Colors.grey, fontSize: 11.0),
+          "Score: " + score.toString(),
+          style: TextStyle(color: Colors.grey),
         ),
-        trailing: mediaType,
-      ),
-    );
-  }
-
-  showPost(context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PostScreenPage(
-          userId: user.id,
-          postId: postId,
+        title: Text(
+          profileName,
+          style: TextStyle(color: Colors.white),
         ),
       ),
     );
   }
+}
 
-  showProfile(context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProfilePage(
-          userid: userId,
-        ),
+// ignore: must_be_immutable
+class UserTile extends StatefulWidget {
+  final String profileName;
+  final String profileUrl;
+  final String userId;
+  final String username;
+  bool selected = false;
+
+  UserTile({
+    this.userId,
+    this.username,
+    this.profileName,
+    this.profileUrl,
+  });
+
+  factory UserTile.fromDocument(DocumentSnapshot doc) {
+    return UserTile(
+      userId: doc.data()['id'],
+      profileName: doc.data()['profileName'],
+      profileUrl: doc.data()['photoUrl'],
+      username: doc.data()['userName'],
+    );
+  }
+
+  @override
+  _UserTileState createState() => _UserTileState(
+        profileName: this.profileName,
+        profileUrl: this.profileUrl,
+        username: this.username,
+        userId: this.userId,
+        selected: this.selected,
+      );
+}
+
+class _UserTileState extends State<UserTile> {
+  final String profileName;
+  final String profileUrl;
+  final String username;
+  final String userId;
+  bool selected;
+
+  _UserTileState({
+    this.username,
+    this.profileName,
+    this.profileUrl,
+    this.userId,
+    this.selected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: () {
+        if (selected) {
+          selected = false;
+        } else {
+          selected = true;
+        }
+        setState(() {
+          addUsers.forEach((element) {
+            if (element.userId == userId) {
+              element.selected = selected;
+            }
+          });
+        });
+        addUsers.forEach((element) {
+          print(element.selected);
+        });
+      },
+      leading: CircleAvatar(
+        backgroundImage: CachedNetworkImageProvider(profileUrl),
+      ),
+      trailing: selected
+          ? Icon(
+              Icons.select_all_outlined,
+              color: Colors.green,
+            )
+          : null,
+      subtitle: Text(
+        profileName,
+        style: TextStyle(color: Colors.grey),
+      ),
+      title: Text(
+        username,
+        style: TextStyle(color: Colors.white),
       ),
     );
   }

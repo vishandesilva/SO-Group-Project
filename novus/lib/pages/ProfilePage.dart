@@ -156,7 +156,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     if (!currentSnapshot.hasData) return circularProgress();
                     User user = User.fromDocument(currentSnapshot.data);
                     return Padding(
-                      padding: EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0, bottom: 3.0),
+                      padding: EdgeInsets.only(
+                        top: 12.0,
+                        left: 12.0,
+                        right: 12.0,
+                        bottom: 3.0,
+                      ),
                       child: Column(
                         children: [
                           Row(
@@ -226,23 +231,48 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Column buildCountStats(String title, int count) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          count.toString(),
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).accentColor),
-        ),
-        Container(
-          margin: EdgeInsets.only(top: 5.0),
-          child: Text(
-            title,
-            style: TextStyle(color: Theme.of(context).accentColor),
-          ),
-        )
-      ],
-    );
+    return title == "Followers" || title == "Following"
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                count.toString(),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              GestureDetector(
+                onTap: () => fTiles(title),
+                child: Container(
+                  margin: EdgeInsets.only(top: 5.0),
+                  child: Text(
+                    title,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              )
+            ],
+          )
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(top: 5.0),
+                child: Text(
+                  title,
+                  style: TextStyle(color: Colors.white),
+                ),
+              )
+            ],
+          );
   }
 
   buildFollowOrUnfollow() {
@@ -268,11 +298,12 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           alignment: Alignment.center,
           decoration: BoxDecoration(
+            color: Colors.blue,
+            border: Border.all(
               color: Colors.blue,
-              border: Border.all(
-                color: Colors.blue,
-              ),
-              borderRadius: BorderRadius.circular(3.0)),
+            ),
+            borderRadius: BorderRadius.circular(3.0),
+          ),
         ),
       ),
     );
@@ -285,7 +316,11 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Center(
           child: Text(
             'Upload Photos',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 40),
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w400,
+              fontSize: 40,
+            ),
           ),
         ),
       );
@@ -347,5 +382,129 @@ class _ProfilePageState extends State<ProfilePage> {
       "photoUrl": user.url,
       "timestamp": timestamp,
     });
+  }
+
+  fTiles(String title) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          contentPadding: EdgeInsets.all(0.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          backgroundColor: Colors.grey[900],
+          title: Center(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(
+                    title,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                Container(
+                  height: 400,
+                  width: double.maxFinite,
+                  child: FutureBuilder(
+                    future: addParticipantsTiles(title.toLowerCase()),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return circularProgress();
+
+                      return Container(
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: snapshot.data,
+                        ),
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
+          ),
+          children: <Widget>[
+            Container(
+              height: 0.10,
+              color: Colors.white,
+            ),
+            SimpleDialogOption(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(
+                    "Back",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17.0,
+                    ),
+                  ),
+                ),
+              ),
+              onPressed: () => Navigator.pop(context),
+            )
+          ],
+        );
+      },
+    );
+  }
+}
+
+addParticipantsTiles(String title) async {
+  List<String> tempIDs = [];
+  List<UserResult> comments = [];
+  QuerySnapshot usersfollowing = await userReference.doc(user.id).collection(title).get();
+
+  usersfollowing.docs.forEach((element) {
+    tempIDs.add(element.id);
+  });
+
+  for (var i = 0; i < tempIDs.length; i++) {
+    DocumentSnapshot usersfoll = await userReference.doc(tempIDs[i]).get();
+    comments.add(UserResult(User.fromDocument(usersfoll)));
+  }
+  return comments;
+}
+
+class UserResult extends StatelessWidget {
+  final User user;
+  UserResult(this.user);
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => showProfile(context),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundImage: CachedNetworkImageProvider(user.url),
+        ),
+        title: Text(
+          user.profileName,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          user.userName,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 12.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  showProfile(context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfilePage(
+          userid: user.id,
+        ),
+      ),
+    );
   }
 }

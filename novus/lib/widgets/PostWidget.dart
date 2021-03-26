@@ -126,16 +126,75 @@ class _PostState extends State<Post> {
                         context: context,
                         builder: (context) {
                           return SimpleDialog(
-                            title: Text("Actions"),
+                            contentPadding: EdgeInsets.all(0.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20.0),
+                            ),
+                            backgroundColor: Colors.grey[900],
+                            title: Center(
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: Text(
+                                      "Delete this post?",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 15.0, left: 20.0, right: 20.0),
+                                    child: Text(
+                                      "This action will remove this post from your profile and cannot be undone.",
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.normal,
+                                        fontSize: 15.0,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                             children: <Widget>[
+                              Container(
+                                height: 0.10,
+                                color: Colors.white,
+                              ),
                               SimpleDialogOption(
-                                  child: Text("Delete Post"),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    deletePost();
-                                  }),
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: Text(
+                                      "Delete",
+                                      style: TextStyle(
+                                        color: Theme.of(context).accentColor,
+                                        fontSize: 17.0,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  deletePost();
+                                },
+                              ),
+                              Container(
+                                height: 0.10,
+                                color: Colors.white,
+                              ),
                               SimpleDialogOption(
-                                child: Text("Cancel"),
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(5.0),
+                                    child: Text(
+                                      "Cancel",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 17.0,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 onPressed: () => Navigator.pop(context),
                               )
                             ],
@@ -248,7 +307,7 @@ class _PostState extends State<Post> {
             ),
           ],
         ),
-        Padding(padding: EdgeInsets.only(bottom: 10.0))
+        Padding(padding: EdgeInsets.only(bottom: 15.0))
       ],
     );
   }
@@ -362,5 +421,7 @@ class _PostState extends State<Post> {
         element.reference.delete();
       }
     });
+
+    setState(() {});
   }
 }

@@ -11,8 +11,6 @@ class TimeLinePage extends StatefulWidget {
 }
 
 class _TimeLinePageState extends State<TimeLinePage> {
-  List<Post> posts;
-
   void initState() {
     super.initState();
     getPosts();
@@ -22,14 +20,14 @@ class _TimeLinePageState extends State<TimeLinePage> {
   Widget build(context) {
     return Scaffold(
       appBar: header(context, appTitle: true, enableActionButton: true),
-      body: RefreshIndicator(
-        onRefresh: () => getPosts(),
-        child: posts == null
-            ? circularProgress()
-            : ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: posts,
-              ),
+      body: FutureBuilder(
+        future: getPosts(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return circularProgress();
+          return ListView(
+            children: snapshot.data,
+          );
+        },
       ),
     );
   }
@@ -42,19 +40,15 @@ class _TimeLinePageState extends State<TimeLinePage> {
       userPostsList.add(element.id);
     });
 
-    // ignore: deprecated_member_use
-    List<Post> posts = List<Post>();
+    //ignore: deprecated_member_use
+    List<Post> posts = [];
     for (var i = 0; i < userPostsList.length; i++) {
       QuerySnapshot tempPosts = await postReference.doc(userPostsList[i]).collection('userPosts').get();
       posts.addAll(tempPosts.docs.map((e) => Post.fromDocument(e)).toList());
       tempPosts.docs.clear();
     }
 
-    if (this.mounted) {
-      setState(() {
-        this.posts = posts;
-        this.posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-      });
-    }
+    posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return posts;
   }
 }
