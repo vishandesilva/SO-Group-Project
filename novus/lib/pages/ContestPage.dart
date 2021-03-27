@@ -29,7 +29,7 @@ class _ContestsPageState extends State<ContestsPage> {
         title: Text(
           "Contests",
           style: TextStyle(
-            color: Colors.purple,
+            color: Theme.of(context).primaryColor,
             fontSize: 25.0,
           ),
         ),
@@ -55,7 +55,7 @@ class _ContestsPageState extends State<ContestsPage> {
               decoration: BoxDecoration(
                 border: Border.all(
                   width: 0.5,
-                  color: Colors.purple,
+                  color: Theme.of(context).primaryColor,
                 ),
                 borderRadius: BorderRadius.circular(12.0),
               ),

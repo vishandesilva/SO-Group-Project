@@ -24,12 +24,20 @@ class _TimeLinePageState extends State<TimeLinePage> {
         future: getPosts(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return circularProgress();
-          return ListView(
-            children: snapshot.data,
+          return RefreshIndicator(
+            onRefresh: () => _refreshData(),
+            child: ListView(
+              children: snapshot.data,
+            ),
           );
         },
       ),
     );
+  }
+
+  Future _refreshData() async {
+    await Future.delayed(Duration(seconds: 3));
+    setState(() {});
   }
 
   getPosts() async {

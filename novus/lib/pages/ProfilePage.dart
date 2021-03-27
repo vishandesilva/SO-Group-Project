@@ -9,6 +9,7 @@ import 'package:novus/widgets/HeaderWidget.dart';
 import 'package:novus/widgets/PostTileWidget.dart';
 import 'package:novus/widgets/PostWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userid;
@@ -158,11 +159,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     return Padding(
                       padding: EdgeInsets.only(
                         top: 12.0,
-                        left: 12.0,
-                        right: 12.0,
+                        left: 10.0,
+                        right: 10.0,
                         bottom: 3.0,
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
@@ -175,9 +177,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    buildCountStats("Posts", postCount),
-                                    buildCountStats("Followers", followersCount),
-                                    buildCountStats("Following", followingCount),
+                                    buildCountStats("Posts", postCount, context),
+                                    buildCountStats("Followers", followersCount, context),
+                                    buildCountStats("Following", followingCount, context),
                                   ],
                                 ),
                               ),
@@ -185,7 +187,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           Container(
                             alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.only(top: 15.0, left: 13),
+                            padding: EdgeInsets.only(top: 15.0, left: 10),
                             child: Text(
                               user.userName,
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0, color: Colors.white),
@@ -193,7 +195,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           Container(
                             alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.only(top: 4.0, left: 13),
+                            padding: EdgeInsets.only(top: 4.0, left: 10),
                             child: Text(
                               user.profileName,
                               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
@@ -201,7 +203,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           Container(
                             alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.only(top: 2.0, left: 13),
+                            padding: EdgeInsets.only(top: 2.0, left: 10),
                             child: Text(
                               user.bio,
                               style: TextStyle(color: Colors.white),
@@ -209,7 +211,14 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [currentUserId != widget.userid ? buildFollowOrUnfollow() : Container()],
+                            children: [
+                              currentUserId != widget.userid
+                                  ? buildFollowOrUnfollow()
+                                  : SizedBox(
+                                      width: 0,
+                                    ),
+                              buildAchievements()
+                            ],
                           ),
                         ],
                       ),
@@ -230,7 +239,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Column buildCountStats(String title, int count) {
+  Column buildCountStats(String title, int count, BuildContext context) {
     return title == "Followers" || title == "Following"
         ? Column(
             mainAxisSize: MainAxisSize.min,
@@ -241,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               GestureDetector(
-                onTap: () => fTiles(title),
+                onTap: () => fTiles(title, context),
                 child: Container(
                   margin: EdgeInsets.only(top: 5.0),
                   child: Text(
@@ -285,22 +294,20 @@ class _ProfilePageState extends State<ProfilePage> {
       title = "Follow";
       function = handleFollow;
     }
-    return Container(
-      padding: EdgeInsets.only(top: 7.0),
+    return Expanded(
       child: TextButton(
         onPressed: function,
         child: Container(
           height: 27.0,
-          width: 200.0,
           child: Text(
             title,
             style: TextStyle(color: Colors.white),
           ),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.blue,
+            color: Theme.of(context).accentColor,
             border: Border.all(
-              color: Colors.blue,
+              color: Theme.of(context).accentColor,
             ),
             borderRadius: BorderRadius.circular(3.0),
           ),
@@ -384,7 +391,7 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  fTiles(String title) {
+  fTiles(String title, BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
@@ -449,22 +456,115 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-}
 
-addParticipantsTiles(String title) async {
-  List<String> tempIDs = [];
-  List<UserResult> comments = [];
-  QuerySnapshot usersfollowing = await userReference.doc(user.id).collection(title).get();
+  addParticipantsTiles(String title) async {
+    List<String> tempIDs = [];
+    List<UserResult> comments = [];
+    QuerySnapshot usersfollowing = await userReference.doc(widget.userid).collection(title).get();
 
-  usersfollowing.docs.forEach((element) {
-    tempIDs.add(element.id);
-  });
+    usersfollowing.docs.forEach((element) {
+      tempIDs.add(element.id);
+    });
 
-  for (var i = 0; i < tempIDs.length; i++) {
-    DocumentSnapshot usersfoll = await userReference.doc(tempIDs[i]).get();
-    comments.add(UserResult(User.fromDocument(usersfoll)));
+    for (var i = 0; i < tempIDs.length; i++) {
+      DocumentSnapshot usersfoll = await userReference.doc(tempIDs[i]).get();
+      comments.add(UserResult(User.fromDocument(usersfoll)));
+    }
+    return comments;
   }
-  return comments;
+
+  buildAchievements() {
+    return Expanded(
+      child: Container(
+        child: TextButton(
+          onPressed: () => userAchievements(),
+          child: Container(
+            height: 27.0,
+            child: Text(
+              "Achievements",
+              style: TextStyle(color: Colors.white),
+            ),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Theme.of(context).accentColor,
+              border: Border.all(
+                color: Theme.of(context).accentColor,
+              ),
+              borderRadius: BorderRadius.circular(3.0),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  userAchievements() {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          contentPadding: EdgeInsets.all(0.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          backgroundColor: Colors.grey[900],
+          title: Center(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(
+                    'Achievements',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                Container(
+                  height: 400,
+                  width: double.maxFinite,
+                  child: FutureBuilder(
+                    future: getAchievements(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return circularProgress();
+
+                      return Container(
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: snapshot.data,
+                        ),
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
+          ),
+          children: <Widget>[
+            Container(
+              height: 0.10,
+              color: Colors.white,
+            ),
+            SimpleDialogOption(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(
+                    "Back",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17.0,
+                    ),
+                  ),
+                ),
+              ),
+              onPressed: () => Navigator.pop(context),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  getAchievements() {}
 }
 
 class UserResult extends StatelessWidget {
@@ -498,13 +598,22 @@ class UserResult extends StatelessWidget {
   }
 
   showProfile(context) {
-    Navigator.push(
+    pushNewScreen(
       context,
-      MaterialPageRoute(
-        builder: (context) => ProfilePage(
-          userid: user.id,
-        ),
+      screen: ProfilePage(
+        userid: user.id,
       ),
+      withNavBar: true, // OPTIONAL VALUE. True by default.
+      pageTransitionAnimation: PageTransitionAnimation.fade,
+    );
+  }
+}
+
+class AchievementTiles extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Text("Test here"),
     );
   }
 }

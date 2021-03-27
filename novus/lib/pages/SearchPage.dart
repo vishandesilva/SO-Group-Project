@@ -4,6 +4,7 @@ import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:novus/pages/ProfilePage.dart';
+import 'package:novus/widgets/PostWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 
 class SearchPage extends StatefulWidget {
@@ -22,51 +23,75 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        brightness: Brightness.dark,
-        title: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(15),
+        appBar: AppBar(
+          bottom: TabBar(
+            tabs: [
+              Tab(text: "Accounts"),
+              Tab(text: "Discover"),
+              Tab(text: "Map View"),
+            ],
           ),
-          child: Center(
-            child: TextFormField(
-              controller: textEditingController,
-              onFieldSubmitted: performSearch,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 17.0,
-                decoration: TextDecoration.none,
-              ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintStyle: TextStyle(color: Theme.of(context).hintColor.withOpacity(0.8)),
-                hintText: "Search",
-                filled: true,
-                prefixIcon: Icon(
-                  Icons.search_outlined,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          brightness: Brightness.dark,
+          title: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Center(
+              child: TextFormField(
+                controller: textEditingController,
+                onFieldSubmitted: performSearch,
+                cursorColor: Colors.white,
+                style: TextStyle(
                   color: Colors.white,
+                  fontSize: 17.0,
+                  decoration: TextDecoration.none,
                 ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    Icons.clear,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
+                  hintText: "Search accounts",
+                  filled: true,
+                  prefixIcon: Icon(
+                    Icons.search_outlined,
                     color: Colors.white,
                   ),
-                  onPressed: textEditingController.clear,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      color: Colors.white,
+                    ),
+                    onPressed: textEditingController.clear,
+                  ),
                 ),
               ),
             ),
           ),
         ),
+        body: GestureDetector(
+          onTap: () => WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
+          child: TabBarView(
+            children: [
+              searchResults == null ? Container() : foundSearchResults(),
+              Container(
+                height: double.maxFinite,
+                child: buildDiscoverTimeline(),
+              ),
+              Icon(Icons.ac_unit)
+            ],
+          ),
+        ),
       ),
-      body: searchResults == null ? noSearchResults() : foundSearchResults(),
     );
   }
 
   // builds the results from query to dispplay
+  //TODO add screen when there is no search results
   foundSearchResults() {
     return StreamBuilder(
         stream: searchResults,
@@ -74,15 +99,22 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
           if (!currentSnapshot.hasData) {
             return circularProgress();
           }
-          List<UserResult> searchedResults = [];
-          currentSnapshot.data.docs.forEach(
-            (document) => searchedResults.add(
-              UserResult(
-                User.fromDocument(document),
+          if (searchResults.first != null) {
+            List<UserResult> searchedResults = [];
+            currentSnapshot.data.docs.forEach(
+              (document) => searchedResults.add(
+                UserResult(
+                  User.fromDocument(document),
+                ),
               ),
-            ),
-          );
-          return ListView(children: searchedResults);
+            );
+            return ListView(children: searchedResults);
+          } else {
+            return Text(
+              "Fsfsfsf",
+              style: TextStyle(color: Colors.white),
+            );
+          }
         });
   }
 
@@ -108,6 +140,38 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
   performSearch(String searchName) {
     Stream<QuerySnapshot> allUsers = userReference.where('profileName', isGreaterThanOrEqualTo: searchName).snapshots();
     if (this.mounted) setState(() => searchResults = allUsers);
+  }
+
+  buildDiscoverTimeline() {
+    return FutureBuilder(
+      future: getPosts(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return circularProgress();
+        return ListView(
+          children: snapshot.data,
+        );
+      },
+    );
+  }
+
+  getPosts() async {
+    List<String> userPostsList = [];
+
+    QuerySnapshot userFollowingIds = await userReference.get();
+    userFollowingIds.docs.forEach((element) {
+      userPostsList.add(element.id);
+    });
+
+    //ignore: deprecated_member_use
+    List<Post> posts = [];
+    for (var i = 0; i < userPostsList.length; i++) {
+      QuerySnapshot tempPosts = await postReference.doc(userPostsList[i]).collection('userPosts').get();
+      posts.addAll(tempPosts.docs.map((e) => Post.fromDocument(e)).toList());
+      tempPosts.docs.clear();
+    }
+
+    posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return posts;
   }
 }
 

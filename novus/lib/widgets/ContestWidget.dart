@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_countdown_timer/current_remaining_time.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
+import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/UploadPage.dart';
 import 'package:novus/pages/contestTImeline.dart';
@@ -45,6 +46,7 @@ class _ContestState extends State<Contest> {
   bool isLoading = false;
   List<Post> posts;
   bool lockPostButton = false;
+  LeaderboardTile userPlacement;
 
   void initState() {
     super.initState();
@@ -65,7 +67,7 @@ class _ContestState extends State<Contest> {
         title: Text(
           "Topic: " + widget.contestName,
           style: TextStyle(
-            color: Colors.purple,
+            color: Theme.of(context).primaryColor,
             fontSize: 25.0,
           ),
         ),
@@ -160,7 +162,8 @@ class _ContestState extends State<Contest> {
                       ),
                       child: CountdownTimer(
                         textStyle: TextStyle(color: Colors.white),
-                        endTime: widget.endDate,
+                        // endTime: widget.endDate,
+                        endTime: DateTime.now().millisecondsSinceEpoch + 1000 * 3,
                         widgetBuilder: (context, CurrentRemainingTime time) {
                           if (time == null) {
                             return TextButton(
@@ -228,6 +231,7 @@ class _ContestState extends State<Contest> {
                                               ),
                                             ),
                                             onPressed: () {
+                                              addAchievementProfile();
                                               Navigator.pop(context);
                                             },
                                           ),
@@ -299,7 +303,7 @@ class _ContestState extends State<Contest> {
                     decoration: BoxDecoration(
                       border: Border.all(
                         width: 0.5,
-                        color: Colors.purple,
+                        color: Theme.of(context).primaryColor,
                       ),
                       borderRadius: BorderRadius.circular(12.0),
                     ),
@@ -325,7 +329,7 @@ class _ContestState extends State<Contest> {
                       decoration: BoxDecoration(
                         border: Border.all(
                           width: 0.5,
-                          color: Colors.purple,
+                          color: Theme.of(context).primaryColor,
                         ),
                         borderRadius: BorderRadius.circular(12.0),
                       ),
@@ -717,7 +721,11 @@ class _ContestState extends State<Contest> {
 
   getResult() async {
     List<LeaderboardTile> leaderboard = await getLeaderboard();
-    return [leaderboard[leaderboard.indexWhere((element) => element.userid == user.id)]];
+    LeaderboardTile temp = leaderboard[leaderboard.indexWhere((element) => element.userid == user.id)];
+    setState(() {
+      userPlacement = temp;
+    });
+    return [temp];
   }
 
   int getTime() {
@@ -725,6 +733,21 @@ class _ContestState extends State<Contest> {
     var fiftyDaysFromNow = today.add(const Duration(days: 4));
     int dateTimeCreatedAt = fiftyDaysFromNow.millisecondsSinceEpoch;
     return dateTimeCreatedAt;
+  }
+
+  void addAchievementProfile() async {
+    DocumentSnapshot tempSnapshot = await userReference.doc(user.id).collection('achievements').doc(widget.contestId).get();
+    if (!tempSnapshot.exists) {
+      DocumentSnapshot hostUserSnapshot = await userReference.doc(widget.hostUserId).get();
+      User hostUser = User.fromDocument(hostUserSnapshot);
+      userReference.doc(user.id).collection('achievements').doc(widget.contestId).set({
+        'score': userPlacement.score,
+        'rank': userPlacement.rank,
+        'contestId': widget.contestId,
+        'contestName': widget.contestName,
+        'hostName': hostUser.userName,
+      });
+    }
   }
 }
 

@@ -41,6 +41,7 @@ dependencies:
   location: ^3.2.4
   location_permissions: ^3.0.0+1
   path_provider: ^1.6.27
+  persistent_bottom_nav_bar: ^4.0.0
   photofilters: ^2.0.1
   timeago: ^2.0.29
   uuid: ^2.2.2
