@@ -20,6 +20,7 @@ class ContestsPage extends StatefulWidget {
 class _ContestsPageState extends State<ContestsPage> {
   final TextEditingController contestNameController = TextEditingController();
   final TextEditingController contestDesriptionController = TextEditingController();
+
   final TextEditingController contestDurationController = TextEditingController();
 
   @override
@@ -55,7 +56,9 @@ class _ContestsPageState extends State<ContestsPage> {
               decoration: BoxDecoration(
                 border: Border.all(
                   width: 0.5,
+
                   color: Theme.of(context).primaryColor,
+
                 ),
                 borderRadius: BorderRadius.circular(12.0),
               ),
@@ -87,8 +90,8 @@ class _ContestsPageState extends State<ContestsPage> {
       context: context,
       builder: (context) {
         bool _contestName = true;
-        bool _contestDuration = true;
 
+        bool _contestDuration = true;
         return StatefulBuilder(
           builder: (context, setState) {
             return SimpleDialog(
@@ -203,7 +206,6 @@ class _ContestsPageState extends State<ContestsPage> {
                         } else {
                           _contestName = true;
                         }
-
                         if (int.parse(contestDurationController.text) < 1 || int.parse(contestDurationController.text) > 5) {
                           _contestDuration = false;
                         } else {
@@ -263,6 +265,7 @@ class _ContestsPageState extends State<ContestsPage> {
     );
   }
 
+
   int getDuration(String days) {
     var today = DateTime.now();
     var fiftyDaysFromNow = today.add(Duration(days: int.parse(days)));
@@ -271,7 +274,6 @@ class _ContestsPageState extends State<ContestsPage> {
   }
 }
 
-// ignore: must_be_immutable
 class ContestTile extends StatelessWidget {
   final String contestName;
   final String contestId;

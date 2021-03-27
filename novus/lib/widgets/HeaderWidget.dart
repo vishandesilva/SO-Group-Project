@@ -25,6 +25,7 @@ AppBar header(BuildContext context,
       appTitle ? "Novus" : title,
       style: TextStyle(
         color: Theme.of(context).primaryColor,
+
         //TODO decide on fonts
         fontFamily: appTitle ? "Signatra" : "",
         fontSize: appTitle ? 35.0 : 25.0,

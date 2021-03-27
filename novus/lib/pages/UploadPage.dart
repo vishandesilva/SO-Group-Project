@@ -6,7 +6,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong/latlong.dart';
 import 'package:novus/models/user.dart';
+import 'package:novus/widgets/FlutterMap.dart';
 import 'package:novus/widgets/HeaderWidget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as imageLib;
@@ -22,6 +24,8 @@ class UploadPage extends StatefulWidget {
   final User userUpload;
   final bool contestUpload;
   final String contestId;
+  double lat;
+  double long;
   UploadPage({this.userUpload, this.contestUpload = false, this.contestId});
 
   @override
@@ -175,15 +179,23 @@ class _UploadPageState extends State<UploadPage> {
           });
         return;
       }
-      SnackBar snackBar = SnackBar(content: Text('The selected image contains faces which are not allowed'));
+      SnackBar snackBar = SnackBar(
+          content:
+              Text('The selected image contains faces which are not allowed'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
   // upload process after "post" button is pressed
   Future<String> uploadPost(File postImage) async {
-    UploadTask uploadTask = storageReference.child("posts").child("post_$postID.jpg").putFile(postImage);
-    String url = await (await uploadTask).ref.getDownloadURL().catchError((err) => "Photo didnt upload");
+    UploadTask uploadTask = storageReference
+        .child("posts")
+        .child("post_$postID.jpg")
+        .putFile(postImage);
+    String url = await (await uploadTask)
+        .ref
+        .getDownloadURL()
+        .catchError((err) => "Photo didnt upload");
     return url;
   }
 
@@ -195,8 +207,7 @@ class _UploadPageState extends State<UploadPage> {
     final compressedImageFile = File('$path/img_$postID.jpg')..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
     setState(() => postImage = compressedImageFile);
   }
-
-  //FIXME issue where location is denied and doesnt prompt for permission. geolocator doesnt work
+  
   getLocation() async {
     Location location = new Location();
     bool _serviceEnabled;
@@ -220,19 +231,44 @@ class _UploadPageState extends State<UploadPage> {
     }
 
     userLocation = await location.getLocation();
+    widget.lat = userLocation.latitude;
+    widget.long = userLocation.longitude;
+    LatLng theLocation = LatLng(userLocation.latitude, userLocation.longitude);
+    theLocation = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            FlutterMapMake(lat: widget.lat, long: widget.long),
+      ),
+    );
 
-    List<geocoding.Placemark> placemarks =
-        await geocoding.placemarkFromCoordinates(userLocation.latitude, userLocation.longitude, localeIdentifier: 'en');
+    if (theLocation == null) {
+      theLocation = LatLng(userLocation.latitude, userLocation.longitude);
+    }
+
+    List<geocoding.Placemark> placemarks = await geocoding
+        .placemarkFromCoordinates(theLocation.latitude, theLocation.longitude,
+            localeIdentifier: 'en');
+
     setState(() {
-      locationController.text = placemarks[0].locality + ", " + placemarks[0].country;
-      print(locationController.text);
+      locationController.text =
+          placemarks[0].locality + ", " + placemarks[0].country;
     });
+  }
+
+  setLocation(double lat, double long) {
+    widget.lat = lat;
+    widget.long = long;
   }
 
   // send post to database
   void postToFireStore(String postUrl, String caption, String location) {
     DateTime timestamp = DateTime.now();
-    postReference.doc(widget.userUpload.id).collection("userPosts").doc(postID).set({
+    postReference
+        .doc(widget.userUpload.id)
+        .collection("userPosts")
+        .doc(postID)
+        .set({
       "postId": postID,
       "ownerId": widget.userUpload.id,
       "username": widget.userUpload.userName,
@@ -376,11 +412,11 @@ class _UploadPageState extends State<UploadPage> {
                   alignment: Alignment.center,
                   child: RaisedButton.icon(
                     label: Text(
-                      "My Current Location",
+                      "Pin your Location!",
                       style: TextStyle(color: Colors.white),
                     ),
                     icon: Icon(
-                      Icons.my_location_outlined,
+                      Icons.pin_drop_outlined,
                       color: Theme.of(context).iconTheme.color,
                     ),
                     shape: RoundedRectangleBorder(

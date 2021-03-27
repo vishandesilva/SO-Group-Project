@@ -69,6 +69,7 @@ class _HomePageState extends State<HomePage> {
         animateTabTransition: true,
         curve: Curves.ease,
         duration: Duration(milliseconds: 200),
+
       ),
       navBarStyle: NavBarStyle.style1, // Choose the nav bar style with this property.
     );

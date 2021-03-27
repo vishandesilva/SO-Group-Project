@@ -109,7 +109,9 @@ class _ContestState extends State<Contest> {
                             'Settings',
                             style: TextStyle(color: Colors.white),
                           ),
+
                           onTap: () => contestSettingsForm(),
+
                         ),
                         ListTile(
                           leading: Icon(
@@ -493,7 +495,7 @@ class _ContestState extends State<Contest> {
       },
     );
   }
-
+  
   getContestPosts() async {
     if (this.mounted) {
       setState(() => isLoading = true);
@@ -699,7 +701,7 @@ class _ContestState extends State<Contest> {
       },
     );
   }
-
+  
   userTiles() async {
     List<String> tempIDs = [];
     List<UserTile> comments = [];
