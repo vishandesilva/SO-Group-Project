@@ -46,6 +46,8 @@ dependencies:
     flutter_map: ^0.11.0
     latlong: ">=0.6.0"
     flutter_map_location_marker: ^0.0.7
+    flutter_countdown_timer: ^4.0.2
+    persistent_bottom_nav_bar: ^4.0.0
 
 dev_dependencies:
     flutter_test:

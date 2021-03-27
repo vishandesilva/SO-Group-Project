@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/UploadPage.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 
 // reusable Appbar widget for pages
 AppBar header(BuildContext context,
@@ -22,7 +24,8 @@ AppBar header(BuildContext context,
     title: Text(
       appTitle ? "Novus" : title,
       style: TextStyle(
-        color: Colors.purple,
+        color: Theme.of(context).primaryColor,
+
         //TODO decide on fonts
         fontFamily: appTitle ? "Signatra" : "",
         fontSize: appTitle ? 35.0 : 25.0,
@@ -34,7 +37,7 @@ AppBar header(BuildContext context,
             IconButton(
               padding: const EdgeInsets.only(top: 10.0, right: 15.0),
               icon: Icon(
-                Icons.chat_bubble_outline,
+                CupertinoIcons.chat_bubble_text,
                 color: Colors.white,
                 size: 30.0,
               ),
@@ -43,17 +46,18 @@ AppBar header(BuildContext context,
             IconButton(
               padding: const EdgeInsets.only(top: 10.0, right: 20.0),
               icon: Icon(
-                Icons.photo_camera_outlined,
+                CupertinoIcons.camera,
                 color: Colors.white,
                 size: 30.0,
               ),
               onPressed: () {
-                Navigator.of(context, rootNavigator: true).push(
-                  MaterialPageRoute(
-                    builder: (context) => UploadPage(
-                      userUpload: user,
-                    ),
+                pushNewScreen(
+                  context,
+                  screen: UploadPage(
+                    userUpload: user,
                   ),
+                  withNavBar: true, // OPTIONAL VALUE. True by default.
+                  pageTransitionAnimation: PageTransitionAnimation.fade,
                 );
               },
             )

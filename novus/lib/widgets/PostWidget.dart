@@ -12,6 +12,8 @@ import 'package:novus/pages/ProfilePage.dart';
 import 'package:novus/widgets/FlutterMap.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class Post extends StatefulWidget {
   final String postId;
@@ -20,7 +22,7 @@ class Post extends StatefulWidget {
   final String location;
   final String caption;
   final String posturl;
-  final DateTime timestamp;
+  final Timestamp timestamp;
   final Map votes;
 
   Post({
@@ -43,7 +45,7 @@ class Post extends StatefulWidget {
       caption: doc.data()['caption'],
       posturl: doc.data()['postUrl'],
       votes: doc.data()['votes'],
-      timestamp: doc.data()['timestamp'].toDate(),
+      timestamp: doc.data()['timestamp'],
     );
   }
 
@@ -77,7 +79,7 @@ class _PostState extends State<Post> {
   final String location;
   final String caption;
   final String posturl;
-  final DateTime timestamp;
+  final Timestamp timestamp;
   int voteCount;
   Map votes;
   bool isVotedEnabled;
@@ -256,7 +258,7 @@ class _PostState extends State<Post> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: 40.0, left: 20.0),
+                  padding: EdgeInsets.only(top: 40.0, left: 15.0),
                 ),
                 GestureDetector(
                   onTap: () => handleVotes(),
@@ -267,7 +269,7 @@ class _PostState extends State<Post> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(right: 20.0),
+                  padding: EdgeInsets.only(right: 15.0),
                 ),
                 GestureDetector(
                   onTap: () =>
@@ -283,7 +285,7 @@ class _PostState extends State<Post> {
             Row(
               children: [
                 Container(
-                  margin: EdgeInsets.only(left: 20.0),
+                  margin: EdgeInsets.only(left: 15.0),
                   child: Text(
                     '$voteCount votes',
                     style: TextStyle(
@@ -298,7 +300,7 @@ class _PostState extends State<Post> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  margin: EdgeInsets.only(left: 20.0),
+                  margin: EdgeInsets.only(left: 15.0),
                   child: Text(
                     '$username ',
                     style: TextStyle(
@@ -315,9 +317,21 @@ class _PostState extends State<Post> {
                 )
               ],
             ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(left: 15.0),
+                  child: Text(
+                    timeago.format(timestamp.toDate()),
+                    style: TextStyle(color: Colors.grey, fontSize: 10.0),
+                  ),
+                ),
+              ],
+            )
           ],
         ),
-        Padding(padding: EdgeInsets.only(bottom: 10.0))
+        Padding(padding: EdgeInsets.only(bottom: 15.0))
       ],
     );
   }
@@ -364,16 +378,16 @@ class _PostState extends State<Post> {
     }
   }
 
-  void openCommentsScreen(
-      BuildContext context, String postId, String ownerId, String posturl) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CommentsPage(
-          postId: postId,
-          posturl: posturl,
-          ownerId: ownerId,
-        ),
+  void openCommentsScreen(BuildContext context, String postId, String ownerId, String posturl) {
+    pushNewScreen(
+      context,
+      screen: CommentsPage(
+        postId: postId,
+        posturl: posturl,
+        ownerId: ownerId,
       ),
+      withNavBar: false, // OPTIONAL VALUE. True by default.
+      pageTransitionAnimation: PageTransitionAnimation.fade,
     );
   }
 
@@ -435,7 +449,7 @@ class _PostState extends State<Post> {
       print(e);
     }
   }
-
+  
   deletePost() async {
     postReference
         .doc(ownerId)
@@ -457,8 +471,10 @@ class _PostState extends State<Post> {
       }
     });
 
+
     QuerySnapshot deletingComments =
         await commentsReference.doc(postId).collection('comments').get();
+
     deletingComments.docs.forEach((element) {
       if (element.exists) {
         element.reference.delete();

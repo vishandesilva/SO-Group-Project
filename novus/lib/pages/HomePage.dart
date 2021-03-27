@@ -10,6 +10,7 @@ import 'package:novus/pages/NotificationsPage.dart';
 import 'package:novus/pages/ProfilePage.dart';
 import 'package:novus/pages/SearchPage.dart';
 import 'package:novus/pages/TimeLinePage.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 
 // using Googles Authentication package to validate users on the application
 final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -31,48 +32,94 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  PageController pageController;
-  int currentPageIndex = 0;
+  PersistentTabController _controller = PersistentTabController(initialIndex: 0);
 
   @override
   Widget build(BuildContext context) {
     if (userSignedIn)
-      return buildHomeScreen();
+      return buildHomeScreen(context);
     else
       return buildSignInScreen();
   }
 
-  Scaffold buildHomeScreen() {
-    return Scaffold(
-      body: PageView(
-        children: [
-          TimeLinePage(),
-          SearchPage(),
-          ContestsPage(
-            userId: user.id,
-          ),
-          NotificationsPage(),
-          ProfilePage(userid: user.id),
-        ],
-        controller: pageController,
-        onPageChanged: (index) => setState(() => this.currentPageIndex = index),
-        physics: NeverScrollableScrollPhysics(),
+  Widget buildHomeScreen(BuildContext context) {
+    return PersistentTabView(
+      context,
+      controller: _controller,
+      screens: _buildScreens(),
+      items: _navBarsItems(),
+      confineInSafeArea: true,
+      decoration: NavBarDecoration(border: Border(top: BorderSide(width: 0.15, color: Colors.white))),
+      backgroundColor: Colors.black, // Default is Colors.white.
+      handleAndroidBackButtonPress: true, // Default is true.
+      resizeToAvoidBottomInset:
+          true, // This needs to be true if you want to move up the screen when keyboard appears. Default is true.
+      stateManagement: true, // Default is true.
+      hideNavigationBarWhenKeyboardShows:
+          true, // Recommended to set 'resizeToAvoidBottomInset' as true while using this argument. Default is true.
+      popAllScreensOnTapOfSelectedTab: true,
+      popActionScreens: PopActionScreensType.all,
+      itemAnimationProperties: ItemAnimationProperties(
+        // Navigation Bar's items animation properties.
+        duration: Duration(milliseconds: 200),
+        curve: Curves.ease,
       ),
-      bottomNavigationBar: CupertinoTabBar(
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home)),
-          BottomNavigationBarItem(icon: Icon(Icons.search)),
-          BottomNavigationBarItem(icon: Icon(Icons.emoji_events)),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications)),
-          BottomNavigationBarItem(icon: Icon(Icons.person)),
-        ],
-        currentIndex: currentPageIndex,
-        onTap: (index) => pageController.jumpToPage(index),
-        activeColor: Colors.deepPurple,
-        inactiveColor: Colors.white,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      screenTransitionAnimation: ScreenTransitionAnimation(
+        // Screen transition animation on change of selected tab.
+        animateTabTransition: true,
+        curve: Curves.ease,
+        duration: Duration(milliseconds: 200),
+
       ),
+      navBarStyle: NavBarStyle.style1, // Choose the nav bar style with this property.
     );
+  }
+
+  List<Widget> _buildScreens() {
+    return [
+      TimeLinePage(),
+      SearchPage(),
+      ContestsPage(
+        userId: user.id,
+      ),
+      NotificationsPage(),
+      ProfilePage(userid: user.id),
+    ];
+  }
+
+  List<PersistentBottomNavBarItem> _navBarsItems() {
+    return [
+      PersistentBottomNavBarItem(
+        icon: Icon(CupertinoIcons.home),
+        title: ("Home"),
+        activeColorPrimary: Theme.of(context).accentColor,
+        inactiveColorPrimary: CupertinoColors.white,
+      ),
+      PersistentBottomNavBarItem(
+        icon: Icon(CupertinoIcons.search),
+        title: ("Search"),
+        activeColorPrimary: Theme.of(context).accentColor,
+        inactiveColorPrimary: CupertinoColors.white,
+      ),
+      PersistentBottomNavBarItem(
+        icon: Icon(Icons.emoji_events_outlined),
+        title: ("Contests"),
+        activeColorPrimary: Theme.of(context).accentColor,
+        inactiveColorPrimary: CupertinoColors.white,
+      ),
+      PersistentBottomNavBarItem(
+        icon: Icon(Icons.notifications_outlined),
+        title: ("Activity"),
+        activeColorPrimary: Theme.of(context).accentColor,
+        inactiveColorPrimary: CupertinoColors.white,
+      ),
+      PersistentBottomNavBarItem(
+        icon: Icon(CupertinoIcons.profile_circled),
+        title: ("Profile"),
+        activeColorPrimary: Theme.of(context).accentColor,
+        inactiveColorPrimary: CupertinoColors.white,
+      ),
+    ];
   }
 
   Scaffold buildSignInScreen() {
@@ -124,7 +171,7 @@ class _HomePageState extends State<HomePage> {
 
   void initState() {
     super.initState();
-    pageController = PageController();
+    //pageController = PageController();
 
     //handle user changes and when a user logs in
     googleSignIn.onCurrentUserChanged.listen(
@@ -141,7 +188,7 @@ class _HomePageState extends State<HomePage> {
 
   void dispose() {
     super.dispose();
-    pageController.dispose();
+    //pageController.dispose();
   }
 
   controlSignIn(GoogleSignInAccount googleSignInAccount) async {
