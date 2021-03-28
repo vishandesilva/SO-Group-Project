@@ -69,7 +69,6 @@ class _HomePageState extends State<HomePage> {
         animateTabTransition: true,
         curve: Curves.ease,
         duration: Duration(milliseconds: 200),
-
       ),
       navBarStyle: NavBarStyle.style1, // Choose the nav bar style with this property.
     );
@@ -130,13 +129,20 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              "Novus",
-              style: TextStyle(
-                color: Colors.deepPurple[700],
-                fontSize: 80,
-                // ignore: todo
-                fontFamily: '', //TODO add font later
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Image(image: AssetImage("assets/images/novus-logo.png"), height: 75.0),
+                  Text(
+                    "OVUS",
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 75.0,
+                    ),
+                  ),
+                ],
               ),
             ),
             Container(

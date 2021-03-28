@@ -521,15 +521,18 @@ class _ProfilePageState extends State<ProfilePage> {
                 Container(
                   height: 400,
                   width: double.maxFinite,
-                  child: FutureBuilder(
-                    future: getAchievements(),
-                    builder: (context, snapshot) {
+                  child: StreamBuilder(
+                    stream: userReference.doc(user.id).collection("achievements").get().asStream(),
+                    builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                       if (!snapshot.hasData) return circularProgress();
-
+                      List<AchievementTiles> tiles = [];
+                      snapshot.data.docs.forEach((element) {
+                        tiles.add(AchievementTiles.fromDocument(element));
+                      });
                       return Container(
                         child: ListView(
                           shrinkWrap: true,
-                          children: snapshot.data,
+                          children: tiles,
                         ),
                       );
                     },
@@ -563,8 +566,6 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-
-  getAchievements() {}
 }
 
 class UserResult extends StatelessWidget {
@@ -610,10 +611,67 @@ class UserResult extends StatelessWidget {
 }
 
 class AchievementTiles extends StatelessWidget {
+  final int score;
+  final int rank;
+  final String contestId;
+  final String contestName;
+  final String hostName;
+
+  AchievementTiles({
+    this.score,
+    this.rank,
+    this.contestId,
+    this.contestName,
+    this.hostName,
+  });
+
+  factory AchievementTiles.fromDocument(DocumentSnapshot doc) {
+    return AchievementTiles(
+      score: doc.data()['score'],
+      rank: doc.data()['rank'],
+      contestName: doc.data()['contestName'],
+      contestId: doc.data()['contestId'],
+      hostName: doc.data()['hostName'],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Text("Test here"),
+    return ListTile(
+      leading: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: Text(
+              "#" + rank.toString(),
+              style: TextStyle(
+                color: rank == 1
+                    ? Colors.yellow
+                    : rank == 2
+                        ? Colors.grey[300]
+                        : rank == 3
+                            ? Colors.brown[700]
+                            : Colors.white,
+                fontSize: 25.0,
+              ),
+            ),
+          ),
+        ],
+      ),
+      subtitle: Text(
+        hostName,
+        style: TextStyle(color: Colors.grey),
+      ),
+      trailing: Text(
+        "Score: " + score.toString(),
+        style: TextStyle(color: Colors.white),
+      ),
+      title: Text(
+        contestName,
+        style: TextStyle(color: Colors.white),
+      ),
     );
   }
 }

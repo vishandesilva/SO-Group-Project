@@ -44,7 +44,7 @@ dependencies:
     timeago: ^2.0.29
     uuid: ^2.2.2
     flutter_map: ^0.11.0
-    latlong: ">=0.6.0"
+    latlong: '>=0.6.0'
     flutter_map_location_marker: ^0.0.7
     flutter_countdown_timer: ^4.0.2
     persistent_bottom_nav_bar: ^4.0.0
@@ -69,6 +69,7 @@ flutter:
 
     assets:
         - assets/images/google_logo.png
+        - assets/images/novus-logo.png
 
         # To add assets to your application, add an assets section, like this:
         # assets:

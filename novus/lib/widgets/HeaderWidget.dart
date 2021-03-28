@@ -21,17 +21,31 @@ AppBar header(BuildContext context,
             preferredSize: Size.fromHeight(4.0),
           )
         : null,
-    title: Text(
-      appTitle ? "Novus" : title,
-      style: TextStyle(
-        color: Theme.of(context).primaryColor,
-
-        //TODO decide on fonts
-        fontFamily: appTitle ? "Signatra" : "",
-        fontSize: appTitle ? 35.0 : 25.0,
-      ),
-      overflow: TextOverflow.ellipsis,
-    ),
+    title: appTitle
+        ? Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Image(image: AssetImage("assets/images/novus-logo.png"), height: 35.0),
+                Text(
+                  "OVUS",
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontSize: 35.0,
+                  ),
+                ),
+              ],
+            ),
+          )
+        : Text(
+            appTitle ? "Novus" : title,
+            style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontSize: 25.0,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
     actions: enableActionButton
         ? <Widget>[
             IconButton(

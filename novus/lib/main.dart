@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.black,
         dialogBackgroundColor: Colors.grey,
-        iconTheme: IconThemeData(color: Colors.blue),
+        iconTheme: IconThemeData(color: createMaterialColor(Color(0xff1A88C9))),
         primarySwatch: createMaterialColor(Color(0xff272091)),
         hintColor: Colors.blue,
         cardColor: Colors.blue,

@@ -56,9 +56,7 @@ class _ContestsPageState extends State<ContestsPage> {
               decoration: BoxDecoration(
                 border: Border.all(
                   width: 0.5,
-
                   color: Theme.of(context).primaryColor,
-
                 ),
                 borderRadius: BorderRadius.circular(12.0),
               ),
@@ -265,7 +263,6 @@ class _ContestsPageState extends State<ContestsPage> {
     );
   }
 
-
   int getDuration(String days) {
     var today = DateTime.now();
     var fiftyDaysFromNow = today.add(Duration(days: int.parse(days)));
@@ -326,20 +323,20 @@ class ContestTile extends StatelessWidget {
       ),
       title: Text(
         contestName,
-        style: TextStyle(color: Colors.white, fontSize: 25.0),
+        style: TextStyle(color: Colors.white, fontSize: 20.0),
       ),
       subtitle: Text(
-        hostUsername,
+        "Host by " + hostUsername,
         style: TextStyle(color: Colors.grey),
       ),
       trailing: !contestEnd
-          ? Icon(
-              Icons.check,
-              color: Colors.green,
+          ? Text(
+              "Available",
+              style: TextStyle(color: Colors.green, fontSize: 15.0),
             )
-          : Icon(
-              Icons.cancel,
-              color: Colors.red,
+          : Text(
+              "Over",
+              style: TextStyle(color: Colors.red, fontSize: 15.0),
             ),
     );
   }
