@@ -7,7 +7,9 @@ import 'package:latlong/latlong.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:flutter/material.dart';
+import 'package:novus/pages/PostScreenPage.dart';
 import 'package:novus/pages/ProfilePage.dart';
+import 'package:novus/widgets/PostTileWidget.dart';
 import 'package:novus/widgets/PostWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 
@@ -82,6 +84,7 @@ class _SearchPageState extends State<SearchPage>
           onTap: () =>
               WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
           child: TabBarView(
+            physics: NeverScrollableScrollPhysics(),
             children: [
               searchResults == null ? Container() : foundSearchResults(),
               Container(
@@ -165,7 +168,7 @@ class _SearchPageState extends State<SearchPage>
 
   buildMap() {
     return FutureBuilder(
-      future: getMarkers(),
+      future: getMarkers(context),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return circularProgress();
 
@@ -230,12 +233,15 @@ class _SearchPageState extends State<SearchPage>
   }
 }
 
-getMarkers() async {
+getMarkers(BuildContext context) async {
   List<String> userPostsList = [];
   List<Marker> markers = [];
   List<LatLng> points = [];
+  List<Post> postsMap = [];
   List<Location> current = [];
   Marker currentMark;
+  List<Post> posts = [];
+  PostTile tile;
 
   QuerySnapshot userFollowingIds = await userReference.get();
   userFollowingIds.docs.forEach((element) {
@@ -243,7 +249,7 @@ getMarkers() async {
   });
 
   //ignore: deprecated_member_use
-  List<Post> posts = [];
+
   for (var i = 0; i < userPostsList.length; i++) {
     QuerySnapshot tempPosts =
         await postReference.doc(userPostsList[i]).collection('userPosts').get();
@@ -259,7 +265,16 @@ getMarkers() async {
 
       if (current != null) {
         try {
-          points.add(LatLng(current[0].latitude, current[0].longitude));
+          currentMark = new Marker(
+              width: 80.0,
+              height: 80.0,
+              point: LatLng(current[0].latitude, current[0].longitude),
+              builder: (ctx) => Container(
+                  child: GestureDetector(
+                      onTap: () =>
+                          openPost(posts[i].ownerId, posts[i].postId, context),
+                      child: Icon(Icons.location_on, size: 50))));
+          markers.add(currentMark);
         } on NoSuchMethodError catch (e) {
           print(e);
         }
@@ -268,21 +283,20 @@ getMarkers() async {
       print(e);
     }
   }
-  try {
-    for (int x = 0; x < points.length; x++) {
-      currentMark = new Marker(
-          width: 80.0,
-          height: 80.0,
-          point: points[x],
-          builder: (ctx) =>
-              Container(child: Icon(Icons.location_on, size: 50)));
-      markers.add(currentMark);
-    }
-  } on NoSuchMethodError catch (e) {
-    print(e);
-  }
 
   return markers;
+}
+
+openPost(String ownerId, String postId, BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PostScreenPage(
+        userId: ownerId,
+        postId: postId,
+      ),
+    ),
+  );
 }
 
 // class to build userprofile represented on the search screen
@@ -338,5 +352,15 @@ class UserResult extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class MarkersPosts {
+  List<Marker> markers;
+  List<String> posts;
+
+  MarkersPosts(List<Marker> x, List<String> y) {
+    this.markers = x;
+    this.posts = y;
   }
 }
