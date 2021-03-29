@@ -180,12 +180,11 @@ class _ContestState extends State<Contest> {
                               widgetBuilder: (context, CurrentRemainingTime time) {
                                 if (time == null) {
                                   contestReference.doc(widget.contestId).update({'contestEnd': true});
+                                  userReference.doc(user.id).update({'points': FieldValue.increment(getScore(posts))});
+                                  lockPostButton = true;
                                   return TextButton(
                                     child: Text("View results"),
                                     onPressed: () {
-                                      setState(() {
-                                        lockPostButton = true;
-                                      });
                                       return showDialog(
                                         context: context,
                                         builder: (context) {

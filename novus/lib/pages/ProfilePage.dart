@@ -220,6 +220,35 @@ class _ProfilePageState extends State<ProfilePage> {
                               buildAchievements()
                             ],
                           ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Container(
+                                alignment: Alignment.centerLeft,
+                                padding: EdgeInsets.only(top: 4.0, left: 10),
+                                child: Text(
+                                  user.points < 10
+                                      ? "Level: 1"
+                                      : user.points < 20
+                                          ? "Level: 2"
+                                          : user.points < 30
+                                              ? "Level: 3"
+                                              : user.points < 40
+                                                  ? "Level: 4"
+                                                  : "Level: 5",
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18.0),
+                                ),
+                              ),
+                              Container(
+                                alignment: Alignment.centerLeft,
+                                padding: EdgeInsets.only(top: 4.0, left: 10),
+                                child: Text(
+                                  "Points: " + user.points.toString(),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18.0),
+                                ),
+                              ),
+                            ],
+                          )
                         ],
                       ),
                     );

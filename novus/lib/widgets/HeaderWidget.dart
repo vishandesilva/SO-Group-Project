@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gradient_text/gradient_text.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/UploadPage.dart';
+import 'package:novus/screens/home_screen.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 
 // reusable Appbar widget for pages
@@ -28,8 +30,16 @@ AppBar header(BuildContext context,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Image(image: AssetImage("assets/images/novus-logo.png"), height: 35.0),
-                Text(
+                GradientText(
                   "OVUS",
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomLeft,
+                    end: Alignment.topRight,
+                    colors: [
+                      Theme.of(context).primaryColor,
+                      Theme.of(context).accentColor,
+                    ],
+                  ),
                   style: TextStyle(
                     color: Theme.of(context).primaryColor,
                     fontSize: 35.0,
@@ -49,14 +59,20 @@ AppBar header(BuildContext context,
     actions: enableActionButton
         ? <Widget>[
             IconButton(
-              padding: const EdgeInsets.only(top: 10.0, right: 15.0),
-              icon: Icon(
-                CupertinoIcons.chat_bubble_text,
-                color: Colors.white,
-                size: 30.0,
-              ),
-              onPressed: null,
-            ),
+                padding: const EdgeInsets.only(top: 10.0, right: 15.0),
+                icon: Icon(
+                  CupertinoIcons.chat_bubble_text,
+                  color: Colors.white,
+                  size: 30.0,
+                ),
+                onPressed: () {
+                  pushNewScreen(
+                    context,
+                    screen: ChatPage(),
+                    withNavBar: true, // OPTIONAL VALUE. True by default.
+                    pageTransitionAnimation: PageTransitionAnimation.fade,
+                  );
+                }),
             IconButton(
               padding: const EdgeInsets.only(top: 10.0, right: 20.0),
               icon: Icon(

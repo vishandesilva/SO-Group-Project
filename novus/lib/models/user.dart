@@ -7,6 +7,7 @@ class User {
   final String url;
   final String email;
   final String bio;
+  int points;
 
   User({
     this.id,
@@ -15,16 +16,17 @@ class User {
     this.url,
     this.email,
     this.bio,
+    this.points,
   });
 
   factory User.fromDocument(DocumentSnapshot doc) {
     return User(
-      id: doc.id,
-      email: doc.data()['email'],
-      userName: doc.data()['userName'],
-      url: doc.data()['photoUrl'],
-      profileName: doc.data()['profileName'],
-      bio: doc.data()['bio'],
-    );
+        id: doc.id,
+        email: doc.data()['email'],
+        userName: doc.data()['userName'],
+        url: doc.data()['photoUrl'],
+        profileName: doc.data()['profileName'],
+        bio: doc.data()['bio'],
+        points: doc.data()['points']);
   }
 }

@@ -30,24 +30,25 @@ dependencies:
     firebase_core: ^0.7.0
     firebase_ml_vision: ^0.10.0
     firebase_storage: ^7.0.0
+    flutter_countdown_timer: ^4.0.2
+    flutter_map: ^0.11.0
+    flutter_map_location_marker: ^0.0.7
     geocoding: ^1.0.5
     geolocator: ^6.1.14
     google_fonts: ^1.1.2
     google_sign_in: ^4.5.9
+    gradient_text: ^1.0.2
     image: ^2.1.19
     image_cropper: ^1.3.1
     image_picker: ^0.6.7+22
+    latlong: '>=0.6.0'
     location: ^3.2.4
     location_permissions: ^3.0.0+1
     path_provider: ^1.6.27
+    persistent_bottom_nav_bar: ^4.0.0
     photofilters: ^2.0.1
     timeago: ^2.0.29
     uuid: ^2.2.2
-    flutter_map: ^0.11.0
-    latlong: '>=0.6.0'
-    flutter_map_location_marker: ^0.0.7
-    flutter_countdown_timer: ^4.0.2
-    persistent_bottom_nav_bar: ^4.0.0
 
 dev_dependencies:
     flutter_test:
@@ -70,7 +71,7 @@ flutter:
     assets:
         - assets/images/google_logo.png
         - assets/images/novus-logo.png
-
+        - assets/images/
         # To add assets to your application, add an assets section, like this:
         # assets:
         #   - images/a_dot_burr.jpeg
