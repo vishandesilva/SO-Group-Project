@@ -24,7 +24,6 @@ class UploadPage extends StatefulWidget {
   final User userUpload;
   final bool contestUpload;
   final String contestId;
-
   double lat;
   double long;
   UploadPage({this.userUpload, this.contestUpload = false, this.contestId});
@@ -111,8 +110,7 @@ class _UploadPageState extends State<UploadPage> {
         return;
       }
       SnackBar snackBar = SnackBar(
-        content:
-            Text('The selected image contains faces which are not allowed'),
+        content: Text('The selected image contains faces which are not allowed'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
@@ -205,10 +203,8 @@ class _UploadPageState extends State<UploadPage> {
   compressImage() async {
     final tempDirectory = await getTemporaryDirectory();
     final path = tempDirectory.path;
-    imageLib.Image tempImageFile =
-        imageLib.decodeImage(postImage.readAsBytesSync());
-    final compressedImageFile = File('$path/img_$postID.jpg')
-      ..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
+    imageLib.Image tempImageFile = imageLib.decodeImage(postImage.readAsBytesSync());
+    final compressedImageFile = File('$path/img_$postID.jpg')..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
     setState(() => postImage = compressedImageFile);
   }
   

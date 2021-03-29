@@ -23,8 +23,8 @@ class _FlutterMapMakeState extends State<FlutterMapMake> {
     return new Scaffold(
       //App Bar ----------------------------
       appBar: AppBar(
-        actions: [],
-        title: Text("Choose your location!",
+        iconTheme: Theme.of(context).iconTheme,
+        title: Text("Choose location",
             style: TextStyle(
               color: Colors.white,
               fontSize: 25,
@@ -115,8 +115,9 @@ class _FlutterMapMakeState extends State<FlutterMapMake> {
 class SimpleMapMake extends StatefulWidget {
   double lat;
   double long;
+  String photoLocation;
 
-  SimpleMapMake({this.lat, this.long});
+  SimpleMapMake({this.lat, this.long, this.photoLocation});
 
   @override
   _SimpleMapMakeState createState() => new _SimpleMapMakeState();
@@ -129,7 +130,8 @@ class _SimpleMapMakeState extends State<SimpleMapMake> {
     return new Scaffold(
       //App Bar ----------------------------
       appBar: AppBar(
-        title: Text("The location!",
+        iconTheme: Theme.of(context).iconTheme,
+        title: Text(widget.photoLocation,
             style: TextStyle(
               color: Colors.white,
               fontSize: 25,

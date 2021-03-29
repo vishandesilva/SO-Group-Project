@@ -1,9 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:latlong/latlong.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:flutter/material.dart';
 import 'package:novus/pages/ProfilePage.dart';
+import 'package:novus/widgets/PostWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 
 class SearchPage extends StatefulWidget {
@@ -11,7 +16,8 @@ class SearchPage extends StatefulWidget {
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMixin<SearchPage> {
+class _SearchPageState extends State<SearchPage>
+    with AutomaticKeepAliveClientMixin<SearchPage> {
   // controller for the textfield
   TextEditingController textEditingController = TextEditingController();
   // place holder for user profiles to display on search screen
@@ -22,51 +28,76 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        brightness: Brightness.dark,
-        title: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(15),
+        appBar: AppBar(
+          bottom: TabBar(
+            tabs: [
+              Tab(text: "Accounts"),
+              Tab(text: "Discover"),
+              Tab(text: "Map View"),
+            ],
           ),
-          child: Center(
-            child: TextFormField(
-              controller: textEditingController,
-              onFieldSubmitted: performSearch,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 17.0,
-                decoration: TextDecoration.none,
-              ),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintStyle: TextStyle(color: Theme.of(context).hintColor.withOpacity(0.8)),
-                hintText: "Search",
-                filled: true,
-                prefixIcon: Icon(
-                  Icons.search_outlined,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          brightness: Brightness.dark,
+          title: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Center(
+              child: TextFormField(
+                controller: textEditingController,
+                onFieldSubmitted: performSearch,
+                cursorColor: Colors.white,
+                style: TextStyle(
                   color: Colors.white,
+                  fontSize: 17.0,
+                  decoration: TextDecoration.none,
                 ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    Icons.clear,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
+                  hintText: "Search accounts",
+                  filled: true,
+                  prefixIcon: Icon(
+                    Icons.search_outlined,
                     color: Colors.white,
                   ),
-                  onPressed: textEditingController.clear,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      Icons.clear,
+                      color: Colors.white,
+                    ),
+                    onPressed: textEditingController.clear,
+                  ),
                 ),
               ),
             ),
           ),
         ),
+        body: GestureDetector(
+          onTap: () =>
+              WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
+          child: TabBarView(
+            children: [
+              searchResults == null ? Container() : foundSearchResults(),
+              Container(
+                height: double.maxFinite,
+                child: buildDiscoverTimeline(),
+              ),
+              buildMap()
+            ],
+          ),
+        ),
       ),
-      body: searchResults == null ? noSearchResults() : foundSearchResults(),
     );
   }
 
   // builds the results from query to dispplay
+  //TODO add screen when there is no search results
   foundSearchResults() {
     return StreamBuilder(
         stream: searchResults,
@@ -74,15 +105,22 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
           if (!currentSnapshot.hasData) {
             return circularProgress();
           }
-          List<UserResult> searchedResults = [];
-          currentSnapshot.data.docs.forEach(
-            (document) => searchedResults.add(
-              UserResult(
-                User.fromDocument(document),
+          if (searchResults.first != null) {
+            List<UserResult> searchedResults = [];
+            currentSnapshot.data.docs.forEach(
+              (document) => searchedResults.add(
+                UserResult(
+                  User.fromDocument(document),
+                ),
               ),
-            ),
-          );
-          return ListView(children: searchedResults);
+            );
+            return ListView(children: searchedResults);
+          } else {
+            return Text(
+              "Fsfsfsf",
+              style: TextStyle(color: Colors.white),
+            );
+          }
         });
   }
 
@@ -97,7 +135,8 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
           padding: EdgeInsets.symmetric(vertical: 200),
           child: Text(
             'Search For Users',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 40),
+            style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w400, fontSize: 40),
           ),
         ),
       ],
@@ -106,9 +145,144 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
 
   // query the database for usernames on submission in textfield
   performSearch(String searchName) {
-    Stream<QuerySnapshot> allUsers = userReference.where('profileName', isGreaterThanOrEqualTo: searchName).get().asStream();
+    Stream<QuerySnapshot> allUsers = userReference
+        .where('profileName', isGreaterThanOrEqualTo: searchName)
+        .snapshots();
     if (this.mounted) setState(() => searchResults = allUsers);
   }
+
+  buildDiscoverTimeline() {
+    return FutureBuilder(
+      future: getPosts(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return circularProgress();
+        return ListView(
+          children: snapshot.data,
+        );
+      },
+    );
+  }
+
+  buildMap() {
+    return FutureBuilder(
+      future: getMarkers(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return circularProgress();
+
+        return FlutterMap(
+          options: new MapOptions(
+            zoom: 2,
+            maxZoom: 19,
+            plugins: [
+              MarkerClusterPlugin(),
+            ],
+          ),
+          layers: [
+            TileLayerOptions(
+              urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              subdomains: ['a', 'b', 'c'],
+            ),
+            MarkerClusterLayerOptions(
+              maxClusterRadius: 120,
+              size: Size(40, 40),
+              fitBoundsOptions: FitBoundsOptions(
+                padding: EdgeInsets.all(50),
+              ),
+              markers: snapshot.data,
+              polygonOptions: PolygonOptions(
+                  borderColor: Colors.purple[400],
+                  color: Colors.black12,
+                  borderStrokeWidth: 3),
+              builder: (context, markers) {
+                return FloatingActionButton(
+                  child: Text(markers.length.toString()),
+                  onPressed: null,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  getPosts() async {
+    List<String> userPostsList = [];
+
+    QuerySnapshot userFollowingIds = await userReference.get();
+    userFollowingIds.docs.forEach((element) {
+      userPostsList.add(element.id);
+    });
+
+    //ignore: deprecated_member_use
+    List<Post> posts = [];
+    for (var i = 0; i < userPostsList.length; i++) {
+      QuerySnapshot tempPosts = await postReference
+          .doc(userPostsList[i])
+          .collection('userPosts')
+          .get();
+      posts.addAll(tempPosts.docs.map((e) => Post.fromDocument(e)).toList());
+      tempPosts.docs.clear();
+    }
+
+    posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return posts;
+  }
+}
+
+getMarkers() async {
+  List<String> userPostsList = [];
+  List<Marker> markers = [];
+  List<LatLng> points = [];
+  List<Location> current = [];
+  Marker currentMark;
+
+  QuerySnapshot userFollowingIds = await userReference.get();
+  userFollowingIds.docs.forEach((element) {
+    userPostsList.add(element.id);
+  });
+
+  //ignore: deprecated_member_use
+  List<Post> posts = [];
+  for (var i = 0; i < userPostsList.length; i++) {
+    QuerySnapshot tempPosts =
+        await postReference.doc(userPostsList[i]).collection('userPosts').get();
+    posts.addAll(tempPosts.docs.map((e) => Post.fromDocument(e)).toList());
+    tempPosts.docs.clear();
+  }
+
+  posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+  for (int i = 0; i < posts.length; i++) {
+    try {
+      current = await locationFromAddress(posts[i].location);
+
+      if (current != null) {
+        try {
+          points.add(LatLng(current[0].latitude, current[0].longitude));
+        } on NoSuchMethodError catch (e) {
+          print(e);
+        }
+      }
+    } on NoResultFoundException catch (e) {
+      print(e);
+    }
+  }
+  try {
+    for (int x = 0; x < points.length; x++) {
+      currentMark = new Marker(
+          width: 80.0,
+          height: 80.0,
+          point: points[x],
+          builder: (ctx) =>
+              Container(child: Icon(Icons.location_on, size: 50)));
+      markers.add(currentMark);
+    }
+  } on NoSuchMethodError catch (e) {
+    print(e);
+  }
+
+  return markers;
 }
 
 // class to build userprofile represented on the search screen

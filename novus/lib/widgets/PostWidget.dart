@@ -12,6 +12,8 @@ import 'package:novus/pages/ProfilePage.dart';
 import 'package:novus/widgets/FlutterMap.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class Post extends StatefulWidget {
   final String postId;
@@ -20,7 +22,7 @@ class Post extends StatefulWidget {
   final String location;
   final String caption;
   final String posturl;
-  final DateTime timestamp;
+  final Timestamp timestamp;
   final Map votes;
 
   Post({
@@ -43,7 +45,7 @@ class Post extends StatefulWidget {
       caption: doc.data()['caption'],
       posturl: doc.data()['postUrl'],
       votes: doc.data()['votes'],
-      timestamp: doc.data()['timestamp'].toDate(),
+      timestamp: doc.data()['timestamp'],
     );
   }
 
@@ -77,7 +79,7 @@ class _PostState extends State<Post> {
   final String location;
   final String caption;
   final String posturl;
-  final DateTime timestamp;
+  final Timestamp timestamp;
   int voteCount;
   Map votes;
   bool isVotedEnabled;
@@ -116,8 +118,7 @@ class _PostState extends State<Post> {
                 onTap: () => showProfile(context),
                 child: Text(
                   user.userName,
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
               subtitle: GestureDetector(
@@ -128,8 +129,7 @@ class _PostState extends State<Post> {
                   )),
               trailing: userId == ownerId
                   ? IconButton(
-                      icon: Icon(Icons.more_vert,
-                          color: Theme.of(context).iconTheme.color),
+                      icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color),
                       onPressed: () => showDialog(
                         context: context,
                         builder: (context) {
@@ -150,8 +150,7 @@ class _PostState extends State<Post> {
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.only(
-                                        bottom: 15.0, left: 20.0, right: 20.0),
+                                    padding: const EdgeInsets.only(bottom: 15.0, left: 20.0, right: 20.0),
                                     child: Text(
                                       "This action will remove this post from your profile and cannot be undone.",
                                       style: TextStyle(
@@ -256,7 +255,7 @@ class _PostState extends State<Post> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: 40.0, left: 20.0),
+                  padding: EdgeInsets.only(top: 40.0, left: 15.0),
                 ),
                 GestureDetector(
                   onTap: () => handleVotes(),
@@ -267,11 +266,10 @@ class _PostState extends State<Post> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(right: 20.0),
+                  padding: EdgeInsets.only(right: 15.0),
                 ),
                 GestureDetector(
-                  onTap: () =>
-                      openCommentsScreen(context, postId, ownerId, posturl),
+                  onTap: () => openCommentsScreen(context, postId, ownerId, posturl),
                   child: Icon(
                     Icons.comment,
                     size: 25.0,
@@ -283,7 +281,7 @@ class _PostState extends State<Post> {
             Row(
               children: [
                 Container(
-                  margin: EdgeInsets.only(left: 20.0),
+                  margin: EdgeInsets.only(left: 15.0),
                   child: Text(
                     '$voteCount votes',
                     style: TextStyle(
@@ -298,7 +296,7 @@ class _PostState extends State<Post> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  margin: EdgeInsets.only(left: 20.0),
+                  margin: EdgeInsets.only(left: 15.0),
                   child: Text(
                     '$username ',
                     style: TextStyle(
@@ -315,9 +313,21 @@ class _PostState extends State<Post> {
                 )
               ],
             ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: EdgeInsets.only(left: 15.0),
+                  child: Text(
+                    timeago.format(timestamp.toDate()),
+                    style: TextStyle(color: Colors.grey, fontSize: 10.0),
+                  ),
+                ),
+              ],
+            )
           ],
         ),
-        Padding(padding: EdgeInsets.only(bottom: 10.0))
+        Padding(padding: EdgeInsets.only(bottom: 15.0))
       ],
     );
   }
@@ -325,11 +335,7 @@ class _PostState extends State<Post> {
   handleVotes() {
     bool isVoted = votes[userId] == true;
     if (isVoted) {
-      postReference
-          .doc(ownerId)
-          .collection('userPosts')
-          .doc(postId)
-          .update({'votes.$userId': false});
+      postReference.doc(ownerId).collection('userPosts').doc(postId).update({'votes.$userId': false});
       removeVoteNotification();
       setState(() {
         voteCount -= 1;
@@ -337,11 +343,7 @@ class _PostState extends State<Post> {
         votes[userId] = false;
       });
     } else if (!isVoted) {
-      postReference
-          .doc(ownerId)
-          .collection('userPosts')
-          .doc(postId)
-          .update({'votes.$userId': true});
+      postReference.doc(ownerId).collection('userPosts').doc(postId).update({'votes.$userId': true});
       addVoteNotification();
       setState(
         () {
@@ -364,27 +366,23 @@ class _PostState extends State<Post> {
     }
   }
 
-  void openCommentsScreen(
-      BuildContext context, String postId, String ownerId, String posturl) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => CommentsPage(
-          postId: postId,
-          posturl: posturl,
-          ownerId: ownerId,
-        ),
+  void openCommentsScreen(BuildContext context, String postId, String ownerId, String posturl) {
+    pushNewScreen(
+      context,
+      screen: CommentsPage(
+        postId: postId,
+        posturl: posturl,
+        ownerId: ownerId,
       ),
+      withNavBar: false, // OPTIONAL VALUE. True by default.
+      pageTransitionAnimation: PageTransitionAnimation.fade,
     );
   }
 
   void addVoteNotification() {
     if (user.id != ownerId) {
       DateTime timestamp = new DateTime.now();
-      notificationsReference
-          .doc(ownerId)
-          .collection("notificationItems")
-          .doc(postId)
-          .set(
+      notificationsReference.doc(ownerId).collection("notificationItems").doc(postId).set(
         {
           "type": "vote",
           "username": user.userName,
@@ -428,7 +426,10 @@ class _PostState extends State<Post> {
         context,
         MaterialPageRoute(
           builder: (context) => SimpleMapMake(
-              lat: locations[0].latitude, long: locations[0].longitude),
+            lat: locations[0].latitude,
+            long: locations[0].longitude,
+            photoLocation: widget.location,
+          ),
         ),
       );
     } on NoResultFoundException catch (e) {
@@ -446,19 +447,16 @@ class _PostState extends State<Post> {
 
     storageReference.child("posts").child("post_$postId.jpg").delete();
 
-    QuerySnapshot deletingNotifications = await notificationsReference
-        .doc(ownerId)
-        .collection("notificationItems")
-        .where('postId', isEqualTo: postId)
-        .get();
+    QuerySnapshot deletingNotifications =
+        await notificationsReference.doc(ownerId).collection("notificationItems").where('postId', isEqualTo: postId).get();
     deletingNotifications.docs.forEach((element) {
       if (element.exists) {
         element.reference.delete();
       }
     });
 
-    QuerySnapshot deletingComments =
-        await commentsReference.doc(postId).collection('comments').get();
+    QuerySnapshot deletingComments = await commentsReference.doc(postId).collection('comments').get();
+
     deletingComments.docs.forEach((element) {
       if (element.exists) {
         element.reference.delete();

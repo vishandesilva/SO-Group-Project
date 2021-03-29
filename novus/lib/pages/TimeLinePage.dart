@@ -24,12 +24,20 @@ class _TimeLinePageState extends State<TimeLinePage> {
         future: getPosts(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return circularProgress();
-          return ListView(
-            children: snapshot.data,
+          return RefreshIndicator(
+            onRefresh: () => _refreshData(),
+            child: ListView(
+              children: snapshot.data,
+            ),
           );
         },
       ),
     );
+  }
+
+  Future _refreshData() async {
+    await Future.delayed(Duration(seconds: 3));
+    setState(() {});
   }
 
   getPosts() async {
@@ -39,8 +47,8 @@ class _TimeLinePageState extends State<TimeLinePage> {
     userFollowingIds.docs.forEach((element) {
       userPostsList.add(element.id);
     });
+    //ignore: deprecated_member_use
 
-    // ignore: deprecated_member_use
     List<Post> posts = [];
     for (var i = 0; i < userPostsList.length; i++) {
       QuerySnapshot tempPosts = await postReference.doc(userPostsList[i]).collection('userPosts').get();
