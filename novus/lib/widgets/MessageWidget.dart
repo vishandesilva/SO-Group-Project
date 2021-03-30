@@ -24,6 +24,7 @@ class Message {
   }
 }
 
+//todo remove this code before submission
 // // EXAMPLE CHATS ON HOME SCREEN
 // List<Message> chats = [
 //   Message(

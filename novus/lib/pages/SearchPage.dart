@@ -1,9 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:latlong/latlong.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:flutter/material.dart';
+import 'package:novus/pages/PostScreenPage.dart';
 import 'package:novus/pages/ProfilePage.dart';
+import 'package:novus/widgets/PostTileWidget.dart';
 import 'package:novus/widgets/PostWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 
@@ -76,13 +82,14 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
         body: GestureDetector(
           onTap: () => WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
           child: TabBarView(
+            physics: NeverScrollableScrollPhysics(),
             children: [
               searchResults == null ? Container() : foundSearchResults(),
               Container(
                 height: double.maxFinite,
                 child: buildDiscoverTimeline(),
               ),
-              Icon(Icons.ac_unit)
+              buildMap()
             ],
           ),
         ),
@@ -154,6 +161,46 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
     );
   }
 
+  buildMap() {
+    return FutureBuilder(
+      future: getMarkers(context),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return circularProgress();
+
+        return FlutterMap(
+          options: new MapOptions(
+            zoom: 2,
+            maxZoom: 19,
+            plugins: [
+              MarkerClusterPlugin(),
+            ],
+          ),
+          layers: [
+            TileLayerOptions(
+              urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              subdomains: ['a', 'b', 'c'],
+            ),
+            MarkerClusterLayerOptions(
+              maxClusterRadius: 120,
+              size: Size(40, 40),
+              fitBoundsOptions: FitBoundsOptions(
+                padding: EdgeInsets.all(50),
+              ),
+              markers: snapshot.data,
+              polygonOptions: PolygonOptions(borderColor: Colors.purple[400], color: Colors.black12, borderStrokeWidth: 3),
+              builder: (context, markers) {
+                return FloatingActionButton(
+                  child: Text(markers.length.toString()),
+                  onPressed: null,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   getPosts() async {
     List<String> userPostsList = [];
 
@@ -173,6 +220,70 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
     posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return posts;
   }
+}
+
+getMarkers(BuildContext context) async {
+  List<String> userPostsList = [];
+  List<Marker> markers = [];
+  List<LatLng> points = [];
+  List<Post> postsMap = [];
+  List<Location> current = [];
+  Marker currentMark;
+  List<Post> posts = [];
+  PostTile tile;
+
+  QuerySnapshot userFollowingIds = await userReference.get();
+  userFollowingIds.docs.forEach((element) {
+    userPostsList.add(element.id);
+  });
+
+  //ignore: deprecated_member_use
+
+  for (var i = 0; i < userPostsList.length; i++) {
+    QuerySnapshot tempPosts = await postReference.doc(userPostsList[i]).collection('userPosts').get();
+    posts.addAll(tempPosts.docs.map((e) => Post.fromDocument(e)).toList());
+    tempPosts.docs.clear();
+  }
+
+  posts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+  for (int i = 0; i < posts.length; i++) {
+    try {
+      current = await locationFromAddress(posts[i].location);
+
+      if (current != null) {
+        try {
+          currentMark = new Marker(
+              width: 80.0,
+              height: 80.0,
+              point: LatLng(current[0].latitude, current[0].longitude),
+              builder: (ctx) => Container(
+                  child: GestureDetector(
+                      onTap: () => openPost(posts[i].ownerId, posts[i].postId, context),
+                      child: Icon(Icons.location_on, size: 50))));
+          markers.add(currentMark);
+        } on NoSuchMethodError catch (e) {
+          print(e);
+        }
+      }
+    } on NoResultFoundException catch (e) {
+      print(e);
+    }
+  }
+
+  return markers;
+}
+
+openPost(String ownerId, String postId, BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PostScreenPage(
+        userId: ownerId,
+        postId: postId,
+      ),
+    ),
+  );
 }
 
 // class to build userprofile represented on the search screen
@@ -228,5 +339,15 @@ class UserResult extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class MarkersPosts {
+  List<Marker> markers;
+  List<String> posts;
+
+  MarkersPosts(List<Marker> x, List<String> y) {
+    this.markers = x;
+    this.posts = y;
   }
 }

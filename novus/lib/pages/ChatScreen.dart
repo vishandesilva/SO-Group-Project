@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:novus/models/message_model.dart';
+import 'package:novus/widgets/MessageWidget.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
+import 'package:novus/screens/ChatSettingsPage.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class ChatScreen extends StatefulWidget {
@@ -14,15 +16,48 @@ class ChatScreen extends StatefulWidget {
   ChatScreen({this.user, this.chatId});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  _ChatScreenState createState() => _ChatScreenState(
+        user: this.user,
+        chatId: this.chatId,
+      );
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin<ChatScreen> {
+  User user;
+  String chatId;
+  String name;
+  List members;
+
+  _ChatScreenState({this.user, this.chatId, this.members, this.name});
+
+  String prevUserId;
   TextEditingController messageController = TextEditingController();
+  ScrollController _scrollController = new ScrollController();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  Future<void> getName() async {
+    String temp;
+    await chatReference.doc(chatId).get().then(
+          (value) => temp = value.data()['name'],
+        );
+
+    if (this.mounted) {
+      setState(
+        () {
+          this.name = temp;
+        },
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    String prevUserId;
+    super.build(context);
+    if (name == null) {
+      getName();
+    }
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -35,11 +70,12 @@ class _ChatScreenState extends State<ChatScreen> {
           text: TextSpan(
             children: [
               TextSpan(
-                  text: widget.user.userName,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  )),
+                text: name,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
               TextSpan(text: '\n'),
               // widget.user.isOnline
               //     ? TextSpan(
@@ -59,35 +95,54 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
         ),
-      ),
-      body: StreamBuilder(
-        stream: chatReference.doc(widget.chatId).collection('messages').orderBy('time', descending: true).snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (!snapshot.hasData) return circularProgress();
-          List<Message> msgs = [];
-          snapshot.data.docs.forEach((element) {
-            msgs.add(Message.fromDocument(element));
-          });
-          return Column(
-            children: <Widget>[
-              Expanded(
-                child: ListView.builder(
-                  reverse: true,
-                  padding: EdgeInsets.all(20),
-                  itemCount: msgs.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final Message message = msgs[index];
-                    final bool isMe = message.sender == widget.user.id;
-                    final bool isSameUser = prevUserId == message.sender;
-                    prevUserId = message.sender;
-                    return _chatBubble(message, isMe, isSameUser);
-                  },
-                ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color),
+            onPressed: () => pushNewScreen(
+              context,
+              screen: ChatSettings(
+                name: name,
+                chatId: widget.chatId,
               ),
-              _sendMessageArea(),
-            ],
-          );
-        },
+              withNavBar: false, // OPTIONAL VALUE. True by default.
+              pageTransitionAnimation: PageTransitionAnimation.fade,
+            ),
+          )
+        ],
+      ),
+      body: GestureDetector(
+        onTap: () => WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
+        child: StreamBuilder(
+          stream: chatReference.doc(widget.chatId).collection('messages').orderBy('time', descending: true).get().asStream(),
+          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            List<Message> msgs = [];
+            if (!snapshot.hasData) return circularProgress();
+            snapshot.data.docs.forEach((element) {
+              msgs.add(Message.fromDocument(element));
+            });
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: EdgeInsets.all(20),
+                    reverse: true,
+                    shrinkWrap: true,
+                    itemCount: msgs.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final Message message = msgs[index];
+                      final bool isMe = message.sender == widget.user.id;
+                      final bool isSameUser = prevUserId == message.sender;
+                      prevUserId = message.sender;
+                      return _chatBubble(message, isMe, isSameUser);
+                    },
+                  ),
+                ),
+                _sendMessageArea(),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -103,7 +158,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 maxWidth: MediaQuery.of(context).size.width * 0.80,
               ),
               padding: EdgeInsets.all(10),
-              margin: EdgeInsets.symmetric(vertical: 3),
+              margin: EdgeInsets.symmetric(vertical: 2),
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor,
                 borderRadius: BorderRadius.circular(15),
@@ -118,7 +173,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           !isSameUser
               ? Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 3),
+                  padding: const EdgeInsets.only(bottom: 25.0, top: 2),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
@@ -159,7 +214,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 maxWidth: MediaQuery.of(context).size.width * 0.80,
               ),
               padding: EdgeInsets.all(10),
-              margin: EdgeInsets.symmetric(vertical: 3),
+              margin: EdgeInsets.symmetric(vertical: 2),
               decoration: BoxDecoration(
                 color: Colors.grey[800],
                 borderRadius: BorderRadius.circular(15),
@@ -174,7 +229,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           !isSameUser
               ? Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0, top: 3),
+                  padding: const EdgeInsets.only(bottom: 25.0, top: 2),
                   child: Row(
                     children: <Widget>[
                       Container(
@@ -246,9 +301,14 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: Icon(Icons.send),
             iconSize: 25,
             color: Theme.of(context).accentColor,
-            onPressed: () {
-              sendMessage();
+            onPressed: () async {
+              await sendMessage();
               messageController.clear();
+              _scrollController.animateTo(
+                0.0,
+                curve: Curves.easeOut,
+                duration: const Duration(milliseconds: 300),
+              );
             },
           ),
         ],

@@ -179,23 +179,15 @@ class _UploadPageState extends State<UploadPage> {
           });
         return;
       }
-      SnackBar snackBar = SnackBar(
-          content:
-              Text('The selected image contains faces which are not allowed'));
+      SnackBar snackBar = SnackBar(content: Text('The selected image contains faces which are not allowed'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
   // upload process after "post" button is pressed
   Future<String> uploadPost(File postImage) async {
-    UploadTask uploadTask = storageReference
-        .child("posts")
-        .child("post_$postID.jpg")
-        .putFile(postImage);
-    String url = await (await uploadTask)
-        .ref
-        .getDownloadURL()
-        .catchError((err) => "Photo didnt upload");
+    UploadTask uploadTask = storageReference.child("posts").child("post_$postID.jpg").putFile(postImage);
+    String url = await (await uploadTask).ref.getDownloadURL().catchError((err) => "Photo didnt upload");
     return url;
   }
 
@@ -207,7 +199,7 @@ class _UploadPageState extends State<UploadPage> {
     final compressedImageFile = File('$path/img_$postID.jpg')..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
     setState(() => postImage = compressedImageFile);
   }
-  
+
   getLocation() async {
     Location location = new Location();
     bool _serviceEnabled;
@@ -237,8 +229,7 @@ class _UploadPageState extends State<UploadPage> {
     theLocation = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            FlutterMapMake(lat: widget.lat, long: widget.long),
+        builder: (context) => FlutterMapMake(lat: widget.lat, long: widget.long),
       ),
     );
 
@@ -246,13 +237,11 @@ class _UploadPageState extends State<UploadPage> {
       theLocation = LatLng(userLocation.latitude, userLocation.longitude);
     }
 
-    List<geocoding.Placemark> placemarks = await geocoding
-        .placemarkFromCoordinates(theLocation.latitude, theLocation.longitude,
-            localeIdentifier: 'en');
+    List<geocoding.Placemark> placemarks =
+        await geocoding.placemarkFromCoordinates(theLocation.latitude, theLocation.longitude, localeIdentifier: 'en');
 
     setState(() {
-      locationController.text =
-          placemarks[0].locality + ", " + placemarks[0].country;
+      locationController.text = placemarks[0].locality + ", " + placemarks[0].country;
     });
   }
 
@@ -264,11 +253,7 @@ class _UploadPageState extends State<UploadPage> {
   // send post to database
   void postToFireStore(String postUrl, String caption, String location) {
     DateTime timestamp = DateTime.now();
-    postReference
-        .doc(widget.userUpload.id)
-        .collection("userPosts")
-        .doc(postID)
-        .set({
+    postReference.doc(widget.userUpload.id).collection("userPosts").doc(postID).set({
       "postId": postID,
       "ownerId": widget.userUpload.id,
       "username": widget.userUpload.userName,
@@ -435,63 +420,65 @@ class _UploadPageState extends State<UploadPage> {
   Scaffold buildUploadScreen() {
     return Scaffold(
       key: _scaffoldKey,
-      appBar: header(context, title: 'Post Photo', enableBackButton: true),
+      appBar: header(context, title: 'Post photo'),
       body: Container(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.camera_alt_outlined,
-                size: 100.0,
-                color: Theme.of(context).buttonColor,
-              ),
-              Padding(
-                padding: EdgeInsets.all(14.0),
-                child: Container(
-                  width: 200.0,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue, width: 4.0),
-                    borderRadius: BorderRadius.circular(20),
-                    //border:
-                  ),
-                  child: TextButton(
-                    onPressed: () => takePhoto(),
-                    child: Text(
-                      "Take a Photo",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 10.0,
+            ),
+            Expanded(
+              child: Container(
+                width: double.maxFinite,
+                height: double.maxFinite,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).primaryColor, width: 4.0),
+                  borderRadius: BorderRadius.circular(20),
+                  //border:
+                ),
+                child: TextButton(
+                  onPressed: () => takePhoto(),
+                  child: Text(
+                    "Take a Photo",
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
                   ),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.all(14.0),
-                child: Container(
-                  width: 200.0,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue, width: 4.0),
-                    borderRadius: BorderRadius.circular(20),
-                    //border:
-                  ),
-                  child: TextButton(
-                    onPressed: () => galleryPhoto(context),
-                    child: Text(
-                      "From Gallery",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
+            ),
+            Container(
+              height: 10.0,
+            ),
+            Expanded(
+              child: Container(
+                width: double.maxFinite,
+                height: double.maxFinite,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blue, width: 4.0),
+                  borderRadius: BorderRadius.circular(20),
+                  //border:
+                ),
+                child: TextButton(
+                  onPressed: () => galleryPhoto(context),
+                  child: Text(
+                    "From Gallery",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
                   ),
                 ),
-              )
-            ],
-          ),
+              ),
+            ),
+            Container(
+              height: 10.0,
+            ),
+          ],
         ),
       ),
     );

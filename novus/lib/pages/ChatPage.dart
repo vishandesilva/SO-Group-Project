@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:novus/pages/HomePage.dart';
-import 'package:novus/screens/chat_screen.dart';
+import 'package:novus/pages/ChatScreen.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 
 class ChatPage extends StatelessWidget {
+  final TextEditingController newChatName = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,9 +24,27 @@ class ChatPage extends StatelessWidget {
             color: Colors.white,
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => newChat(context),
+            child: Row(
+              children: [
+                Text(
+                  "New chat",
+                  style: TextStyle(color: Theme.of(context).accentColor, fontSize: 19),
+                ),
+                Icon(
+                  CupertinoIcons.add,
+                  color: Theme.of(context).accentColor,
+                  size: 30,
+                )
+              ],
+            ),
+          )
+        ],
       ),
       body: StreamBuilder(
-        stream: chatReference.where("members", arrayContains: user.id).snapshots(),
+        stream: chatReference.where("members", arrayContains: user.id).get().asStream(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (!snapshot.hasData) return circularProgress();
           List<ChatTiles> temp = [];
@@ -37,23 +58,146 @@ class ChatPage extends StatelessWidget {
       ),
     );
   }
+
+  newChat(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        bool _chatName = true;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SimpleDialog(
+              contentPadding: EdgeInsets.all(0.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              backgroundColor: Colors.grey[900],
+              title: Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Container(
+                  width: double.maxFinite,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          "Chat room details",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: newChatName,
+                          decoration: InputDecoration(
+                            labelText: "Name",
+                            labelStyle: TextStyle(color: Colors.white),
+                            hintText: "Provide a name",
+                            hintStyle: TextStyle(color: Colors.white38),
+                            errorText: !_chatName ? "name required" : null,
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                          ),
+                          cursorColor: Colors.white,
+                          style: TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              children: <Widget>[
+                Container(
+                  height: 0.10,
+                  color: Colors.white,
+                ),
+                SimpleDialogOption(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Text(
+                        "Done",
+                        style: TextStyle(
+                          color: Theme.of(context).accentColor,
+                          fontSize: 17.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    setState(
+                      () {
+                        if (newChatName.text.isEmpty) {
+                          _chatName = false;
+                        } else {
+                          _chatName = true;
+                        }
+                      },
+                    );
+
+                    if (_chatName) {
+                      var df = chatReference.doc();
+                      chatReference.doc(df.id).set({
+                        'chatId': df.id,
+                        'members': [user.id],
+                        'name': newChatName.text,
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+                Container(
+                  height: 0.10,
+                  color: Colors.white,
+                ),
+                SimpleDialogOption(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Text(
+                        "Cancel",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                )
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
 class ChatTiles extends StatefulWidget {
   final String chatPhotoUrl;
   final String name;
   final String chatId;
+  final List members;
 
   ChatTiles({
     this.chatPhotoUrl,
     this.name,
     this.chatId,
+    this.members,
   });
 
   factory ChatTiles.fromDocument(DocumentSnapshot doc) {
     return ChatTiles(
       chatId: doc.data()['chatId'],
       name: doc.data()['name'],
+      members: doc.data()['members'],
       // chatPhotoUrl: doc.data()['chatPhotoUrl'],
     );
   }
@@ -63,6 +207,7 @@ class ChatTiles extends StatefulWidget {
         chatId: this.chatId,
         name: this.name,
         chatPhotoUrl: this.chatPhotoUrl,
+        members: this.members,
       );
 }
 
@@ -70,11 +215,13 @@ class _ChatTilesState extends State<ChatTiles> {
   String chatPhotoUrl;
   String name;
   String chatId;
+  List members;
 
   _ChatTilesState({
     this.chatPhotoUrl,
     this.name,
     this.chatId,
+    this.members,
   });
 
   @override

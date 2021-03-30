@@ -3,8 +3,6 @@ import 'package:animator/animator.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/CommentsPage.dart';
 import 'package:novus/pages/HomePage.dart';

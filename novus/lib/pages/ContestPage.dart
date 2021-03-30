@@ -2,10 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:novus/widgets/ContestWidget.dart';
-import 'package:novus/widgets/HeaderWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
-import 'package:timeago/timeago.dart' as timeago;
-
 import 'HomePage.dart';
 
 class ContestsPage extends StatefulWidget {
@@ -88,7 +85,6 @@ class _ContestsPageState extends State<ContestsPage> {
       context: context,
       builder: (context) {
         bool _contestName = true;
-
         bool _contestDuration = true;
         return StatefulBuilder(
           builder: (context, setState) {

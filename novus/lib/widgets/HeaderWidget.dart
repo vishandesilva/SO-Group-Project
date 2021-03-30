@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gradient_text/gradient_text.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/UploadPage.dart';
-import 'package:novus/screens/home_screen.dart';
+import 'package:novus/pages/ChatPage.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 
 // reusable Appbar widget for pages

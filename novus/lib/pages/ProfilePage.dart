@@ -504,23 +504,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
   buildAchievements() {
     return Expanded(
-      child: Container(
-        child: TextButton(
-          onPressed: () => userAchievements(),
-          child: Container(
-            height: 27.0,
-            child: Text(
-              "Achievements",
-              style: TextStyle(color: Colors.white),
-            ),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
+      child: TextButton(
+        onPressed: () => userAchievements(),
+        child: Container(
+          height: 27.0,
+          child: Text(
+            "Achievements",
+            style: TextStyle(color: Colors.white),
+          ),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Theme.of(context).accentColor,
+            border: Border.all(
               color: Theme.of(context).accentColor,
-              border: Border.all(
-                color: Theme.of(context).accentColor,
-              ),
-              borderRadius: BorderRadius.circular(3.0),
             ),
+            borderRadius: BorderRadius.circular(3.0),
           ),
         ),
       ),
