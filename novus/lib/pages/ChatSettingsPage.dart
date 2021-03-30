@@ -1,25 +1,36 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/ProfilePage.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
+import 'package:uuid/uuid.dart';
 
 List<UserTile> addUsers;
 
 class ChatSettings extends StatefulWidget {
   final String chatId;
   final String name;
+  final String chatUrl;
 
-  ChatSettings({this.chatId, this.name});
+  ChatSettings({this.chatId, this.name, this.chatUrl});
 
   @override
-  _ChatSettingsState createState() => _ChatSettingsState();
+  _ChatSettingsState createState() => _ChatSettingsState(chatUrl: chatUrl);
 }
 
 class _ChatSettingsState extends State<ChatSettings> {
+  String chatUrl;
+
+  _ChatSettingsState({this.chatUrl});
+
   TextEditingController chatTitleController = TextEditingController();
 
   @override
@@ -44,23 +55,39 @@ class _ChatSettingsState extends State<ChatSettings> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
-                  onSubmitted: (value) => chatReference.doc(widget.chatId).update({'name': chatTitleController.text}),
-                  controller: chatTitleController,
-                  decoration: InputDecoration(
-                    labelText: "Title",
-                    labelStyle: TextStyle(color: Colors.white),
-                    hintText: "Group name",
-                    hintStyle: TextStyle(color: Colors.white38),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => changeChatPhoto(),
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundImage: widget.chatUrl == "" ? null : CachedNetworkImageProvider(chatUrl),
+                      ),
                     ),
-                  ),
-                  cursorColor: Colors.white,
-                  style: TextStyle(
-                    color: Colors.white,
-                    decoration: TextDecoration.none,
-                  ),
+                    Container(
+                      width: 10.0,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        onSubmitted: (value) => chatReference.doc(widget.chatId).update({'name': chatTitleController.text}),
+                        controller: chatTitleController,
+                        decoration: InputDecoration(
+                          labelText: "Title",
+                          labelStyle: TextStyle(color: Colors.white),
+                          hintText: "Group name",
+                          hintStyle: TextStyle(color: Colors.white38),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white),
+                          ),
+                        ),
+                        cursorColor: Colors.white,
+                        style: TextStyle(
+                          color: Colors.white,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 TextButton(
                   onPressed: () => addMember(),
@@ -245,6 +272,23 @@ class _ChatSettingsState extends State<ChatSettings> {
       comments.add(UserResult(User.fromDocument(usersfoll)));
     }
     return comments;
+  }
+
+  changeChatPhoto() async {
+    var imagePicker = ImagePicker();
+    String postID = Uuid().v4();
+    PickedFile tempImage =
+        await imagePicker.getImage(source: ImageSource.gallery, maxHeight: 700, maxWidth: 900, imageQuality: 100);
+    File croppedFile = await ImageCropper.cropImage(sourcePath: tempImage.path, compressQuality: 100, aspectRatioPresets: [
+      CropAspectRatioPreset.square,
+    ]);
+    UploadTask uploadTask = storageReference.child("posts").child("chatphoto_$postID.jpg").putFile(croppedFile);
+    String url = await (await uploadTask).ref.getDownloadURL().catchError((err) => "Photo didnt upload");
+
+    chatReference.doc(widget.chatId).update({"chatUrl": url});
+    setState(() {
+      chatUrl = url;
+    });
   }
 }
 

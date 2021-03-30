@@ -77,7 +77,7 @@ class _ContestState extends State<Contest> {
             ),
           ),
           title: Text(
-            "Topic: " + widget.contestName,
+            widget.contestName,
             style: TextStyle(
               color: Theme.of(context).primaryColor,
               fontSize: 25.0,
@@ -605,8 +605,9 @@ class _ContestState extends State<Contest> {
           tempIDs.add(element.id);
         });
 
-        for (var i = 0; i < tempIDs.length; i++) {
-          DocumentSnapshot snapshot = await postReference.doc(user.id).collection('userPosts').doc(tempIDs[i]).get();
+        for (var j = 0; j < tempIDs.length; j++) {
+          DocumentSnapshot snapshot =
+              await postReference.doc(widget.participants[i]).collection('userPosts').doc(tempIDs[j]).get();
           tempPosts.add(Post.fromDocument(snapshot));
         }
       }

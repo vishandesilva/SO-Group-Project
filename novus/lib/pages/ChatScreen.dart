@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:novus/widgets/MessageWidget.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
-import 'package:novus/screens/ChatSettingsPage.dart';
+import 'package:novus/pages/ChatSettingsPage.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -12,23 +12,26 @@ import 'package:timeago/timeago.dart' as timeago;
 class ChatScreen extends StatefulWidget {
   final User user;
   final String chatId;
+  final String chatUrl;
 
-  ChatScreen({this.user, this.chatId});
+  ChatScreen({this.user, this.chatId, this.chatUrl});
 
   @override
   _ChatScreenState createState() => _ChatScreenState(
         user: this.user,
         chatId: this.chatId,
+        chatUrl: this.chatUrl,
       );
 }
 
 class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMixin<ChatScreen> {
   User user;
   String chatId;
+  String chatUrl;
   String name;
   List members;
 
-  _ChatScreenState({this.user, this.chatId, this.members, this.name});
+  _ChatScreenState({this.user, this.chatId, this.members, this.name, this.chatUrl});
 
   String prevUserId;
   TextEditingController messageController = TextEditingController();
@@ -102,6 +105,7 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
               context,
               screen: ChatSettings(
                 name: name,
+                chatUrl: chatUrl,
                 chatId: widget.chatId,
               ),
               withNavBar: false, // OPTIONAL VALUE. True by default.

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,12 @@ import 'package:novus/pages/ChatScreen.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
+  @override
+  _ChatPageState createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
   final TextEditingController newChatName = TextEditingController();
 
   @override
@@ -145,6 +151,7 @@ class ChatPage extends StatelessWidget {
                         'chatId': df.id,
                         'members': [user.id],
                         'name': newChatName.text,
+                        'chatUrl': "",
                       });
                       Navigator.pop(context);
                     }
@@ -181,13 +188,13 @@ class ChatPage extends StatelessWidget {
 }
 
 class ChatTiles extends StatefulWidget {
-  final String chatPhotoUrl;
+  final String chatUrl;
   final String name;
   final String chatId;
   final List members;
 
   ChatTiles({
-    this.chatPhotoUrl,
+    this.chatUrl,
     this.name,
     this.chatId,
     this.members,
@@ -198,7 +205,7 @@ class ChatTiles extends StatefulWidget {
       chatId: doc.data()['chatId'],
       name: doc.data()['name'],
       members: doc.data()['members'],
-      // chatPhotoUrl: doc.data()['chatPhotoUrl'],
+      chatUrl: doc.data()['chatUrl'],
     );
   }
 
@@ -206,7 +213,7 @@ class ChatTiles extends StatefulWidget {
   _ChatTilesState createState() => _ChatTilesState(
         chatId: this.chatId,
         name: this.name,
-        chatPhotoUrl: this.chatPhotoUrl,
+        chatPhotoUrl: this.chatUrl,
         members: this.members,
       );
 }
@@ -230,6 +237,7 @@ class _ChatTilesState extends State<ChatTiles> {
       onTap: () => pushNewScreen(
         context,
         screen: ChatScreen(
+          chatUrl: chatPhotoUrl,
           user: user,
           chatId: chatId,
         ),
@@ -258,7 +266,7 @@ class _ChatTilesState extends State<ChatTiles> {
               //       ),
               child: CircleAvatar(
                 radius: 35,
-                backgroundImage: null,
+                backgroundImage: chatPhotoUrl == "" ? null : CachedNetworkImageProvider(chatPhotoUrl),
               ),
             ),
             Container(
