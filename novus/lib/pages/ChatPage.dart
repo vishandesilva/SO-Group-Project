@@ -25,7 +25,7 @@ class _ChatPageState extends State<ChatPage> {
         brightness: Brightness.dark,
         elevation: 8,
         title: Text(
-          'Chats',
+          'Groups',
           style: TextStyle(
             color: Colors.white,
           ),
@@ -36,7 +36,7 @@ class _ChatPageState extends State<ChatPage> {
             child: Row(
               children: [
                 Text(
-                  "New chat",
+                  "New group",
                   style: TextStyle(color: Theme.of(context).accentColor, fontSize: 19),
                 ),
                 Icon(
@@ -87,7 +87,7 @@ class _ChatPageState extends State<ChatPage> {
                     children: [
                       Center(
                         child: Text(
-                          "Chat room details",
+                          "Group details",
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
