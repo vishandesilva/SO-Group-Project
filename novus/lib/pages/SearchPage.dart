@@ -254,13 +254,18 @@ getMarkers(BuildContext context) async {
       if (current != null) {
         try {
           currentMark = new Marker(
-              width: 80.0,
-              height: 80.0,
-              point: LatLng(current[0].latitude, current[0].longitude),
-              builder: (ctx) => Container(
-                  child: GestureDetector(
-                      onTap: () => openPost(posts[i].ownerId, posts[i].postId, context),
-                      child: Icon(Icons.location_on, size: 50))));
+            width: 40.0,
+            height: 40.0,
+            point: LatLng(current[0].latitude, current[0].longitude),
+            builder: (ctx) => Container(
+              child: GestureDetector(
+                onTap: () => openPost(posts[i].ownerId, posts[i].postId, context),
+                child: CircleAvatar(
+                  backgroundImage: CachedNetworkImageProvider(posts[i].posturl),
+                ),
+              ),
+            ),
+          );
           markers.add(currentMark);
         } on NoSuchMethodError catch (e) {
           print(e);

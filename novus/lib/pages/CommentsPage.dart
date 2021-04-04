@@ -14,7 +14,7 @@ class CommentsPage extends StatefulWidget {
   final String ownerId;
   final String posturl;
 
-  CommentsPage({
+CommentsPage({
     this.postId,
     this.ownerId,
     this.posturl,

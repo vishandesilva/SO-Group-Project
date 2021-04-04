@@ -112,15 +112,26 @@ class _ChatSettingsState extends State<ChatSettings> {
                   color: Colors.white,
                   height: 0.1,
                 ),
-                FutureBuilder(
-                  future: getChatMembers(),
-                  builder: (context, snapshot) {
+                StreamBuilder(
+                  stream: chatReference.doc(widget.chatId).get().asStream(),
+                  builder: (context, AsyncSnapshot<DocumentSnapshot> snapshot) {
                     if (!snapshot.hasData) return circularProgress();
-                    return Container(
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: snapshot.data,
-                      ),
+                    List tempMembers = snapshot.data['members'];
+                    return StreamBuilder(
+                      stream: userReference.where('id', whereIn: tempMembers).get().asStream(),
+                      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot2) {
+                        if (!snapshot2.hasData) return circularProgress();
+                        List<UserResult> comments = [];
+                        snapshot2.data.docs.forEach((element) {
+                          comments.add(UserResult(User.fromDocument(element)));
+                        });
+                        return Container(
+                          child: ListView(
+                            shrinkWrap: true,
+                            children: comments,
+                          ),
+                        );
+                      },
                     );
                   },
                 )
@@ -253,24 +264,6 @@ class _ChatSettingsState extends State<ChatSettings> {
       }
     }
     addUsers = comments;
-    return comments;
-  }
-
-  getChatMembers() async {
-    List<String> members = [];
-    await chatReference.doc(widget.chatId).get().then(
-          (value) => List.from(value.data()['members']).forEach(
-            (element) {
-              members.add(element);
-            },
-          ),
-        );
-
-    List<UserResult> comments = [];
-    for (var i = 0; i < members.length; i++) {
-      DocumentSnapshot usersfoll = await userReference.doc(members[i]).get();
-      comments.add(UserResult(User.fromDocument(usersfoll)));
-    }
     return comments;
   }
 
