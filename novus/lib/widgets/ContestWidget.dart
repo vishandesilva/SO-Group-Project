@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_countdown_timer/current_remaining_time.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
+import 'package:gradient_text/gradient_text.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/UploadPage.dart';
@@ -76,8 +77,16 @@ class _ContestState extends State<Contest> {
               color: Theme.of(context).accentColor,
             ),
           ),
-          title: Text(
+          title: GradientText(
             widget.contestName,
+            gradient: LinearGradient(
+              begin: Alignment.bottomLeft,
+              end: Alignment.topRight,
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).accentColor,
+              ],
+            ),
             style: TextStyle(
               color: Theme.of(context).primaryColor,
               fontSize: 25.0,
@@ -687,6 +696,15 @@ class _ContestState extends State<Contest> {
                     contestReference.doc(widget.contestId).update({
                       'participants': FieldValue.arrayUnion([element.userId])
                     });
+                    DateTime timestamp = new DateTime.now();
+                    notificationsReference.doc(element.userId).collection('notificationItems').doc().set({
+                      'type': 'contest',
+                      'username': user.userName,
+                      'userId': user.id,
+                      'photoUrl': user.url,
+                      'commentData': widget.contestName,
+                      'timestamp': timestamp,
+                    });
                   }
                 });
                 addUsers.clear();
@@ -758,13 +776,15 @@ class _ContestState extends State<Contest> {
     if (!tempSnapshot.exists) {
       DocumentSnapshot hostUserSnapshot = await userReference.doc(widget.hostUserId).get();
       User hostUser = User.fromDocument(hostUserSnapshot);
-      userReference.doc(user.id).collection('achievements').doc(widget.contestId).set({
-        'score': userPlacement.score,
-        'rank': userPlacement.rank,
-        'contestId': widget.contestId,
-        'contestName': widget.contestName,
-        'hostName': hostUser.userName,
-      });
+      userReference.doc(user.id).collection('achievements').doc(widget.contestId).set(
+        {
+          'score': userPlacement.score,
+          'rank': userPlacement.rank,
+          'contestId': widget.contestId,
+          'contestName': widget.contestName,
+          'hostName': hostUser.userName,
+        },
+      );
     }
   }
 }

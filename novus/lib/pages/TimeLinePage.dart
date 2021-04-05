@@ -49,8 +49,6 @@ class _TimeLinePageState extends State<TimeLinePage> {
       userPostsList.add(element.id);
     });
 
-    //ignore: deprecated_member_use
-
     List<Post> posts = [];
     for (var i = 0; i < userPostsList.length; i++) {
       QuerySnapshot tempPosts = await postReference.doc(userPostsList[i]).collection('userPosts').get();

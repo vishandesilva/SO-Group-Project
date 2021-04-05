@@ -48,13 +48,20 @@ AppBar header(BuildContext context,
               ],
             ),
           )
-        : Text(
-            appTitle ? "Novus" : title,
+        : GradientText(
+            title,
+            gradient: LinearGradient(
+              begin: Alignment.bottomLeft,
+              end: Alignment.topRight,
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).accentColor,
+              ],
+            ),
             style: TextStyle(
               color: Theme.of(context).primaryColor,
               fontSize: 25.0,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
     actions: enableActionButton
         ? <Widget>[

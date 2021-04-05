@@ -101,28 +101,29 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
   //TODO add screen when there is no search results
   foundSearchResults() {
     return StreamBuilder(
-        stream: searchResults,
-        builder: (context, currentSnapshot) {
-          if (!currentSnapshot.hasData) {
-            return circularProgress();
-          }
-          if (searchResults.first != null) {
-            List<UserResult> searchedResults = [];
-            currentSnapshot.data.docs.forEach(
-              (document) => searchedResults.add(
-                UserResult(
-                  User.fromDocument(document),
-                ),
+      stream: searchResults,
+      builder: (context, currentSnapshot) {
+        if (!currentSnapshot.hasData) {
+          return circularProgress();
+        }
+        if (searchResults.first != null) {
+          List<UserResult> searchedResults = [];
+          currentSnapshot.data.docs.forEach(
+            (document) => searchedResults.add(
+              UserResult(
+                User.fromDocument(document),
               ),
-            );
-            return ListView(children: searchedResults);
-          } else {
-            return Text(
-              "Fsfsfsf",
-              style: TextStyle(color: Colors.white),
-            );
-          }
-        });
+            ),
+          );
+          return ListView(children: searchedResults);
+        } else {
+          return Text(
+            "Fsfsfsf",
+            style: TextStyle(color: Colors.white),
+          );
+        }
+      },
+    );
   }
 
   //TODO if search cant be found

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:gradient_text/gradient_text.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:novus/models/user.dart';
@@ -38,10 +39,19 @@ class _ChatSettingsState extends State<ChatSettings> {
     chatTitleController.text = widget.name;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Settings',
+        title: GradientText(
+          "Settings",
+          gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).accentColor,
+            ],
+          ),
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).primaryColor,
+            fontSize: 25.0,
           ),
         ),
         iconTheme: Theme.of(context).iconTheme,

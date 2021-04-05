@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gradient_text/gradient_text.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/ChatScreen.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
@@ -24,10 +25,19 @@ class _ChatPageState extends State<ChatPage> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         brightness: Brightness.dark,
         elevation: 8,
-        title: Text(
-          'Groups',
+        title: GradientText(
+          "Groups",
+          gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).accentColor,
+            ],
+          ),
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).primaryColor,
+            fontSize: 25.0,
           ),
         ),
         actions: [

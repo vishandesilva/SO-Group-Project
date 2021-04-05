@@ -24,7 +24,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       body: ListView(
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 15.0),
+            padding: const EdgeInsets.only(left: 15.0, top: 15.0),
             child: Text(
               "Notifications",
               style: TextStyle(color: Theme.of(context).accentColor, fontSize: 17),
@@ -190,6 +190,8 @@ class NotificationsItem extends StatelessWidget {
       notificationText = "is following you";
     else if (type == 'comment')
       notificationText = "replied $commentData";
+    else if (type == 'contest')
+      notificationText = "added you to contest $commentData";
     else
       notificationText = "err";
   }
