@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -25,9 +24,10 @@ class UploadPage extends StatefulWidget {
   final User userUpload;
   final bool contestUpload;
   final String contestId;
+  final String contestName;
   double lat;
   double long;
-  UploadPage({this.userUpload, this.contestUpload = false, this.contestId});
+  UploadPage({this.userUpload, this.contestUpload = false, this.contestId, this.contestName = ""});
 
   @override
   _UploadPageState createState() => _UploadPageState();
@@ -181,23 +181,15 @@ class _UploadPageState extends State<UploadPage> {
           });
         return;
       }
-      SnackBar snackBar = SnackBar(
-          content:
-              Text('The selected image contains faces which are not allowed'));
+      SnackBar snackBar = SnackBar(content: Text('The selected image contains faces which are not allowed'));
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
   }
 
   // upload process after "post" button is pressed
   Future<String> uploadPost(File postImage) async {
-    UploadTask uploadTask = storageReference
-        .child("posts")
-        .child("post_$postID.jpg")
-        .putFile(postImage);
-    String url = await (await uploadTask)
-        .ref
-        .getDownloadURL()
-        .catchError((err) => "Photo didnt upload");
+    UploadTask uploadTask = storageReference.child("posts").child("post_$postID.jpg").putFile(postImage);
+    String url = await (await uploadTask).ref.getDownloadURL().catchError((err) => "Photo didnt upload");
     return url;
   }
 
@@ -241,8 +233,7 @@ class _UploadPageState extends State<UploadPage> {
     theLocation = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            FlutterMapMake(lat: widget.lat, long: widget.long),
+        builder: (context) => FlutterMapMake(lat: widget.lat, long: widget.long),
       ),
     );
 
@@ -250,10 +241,9 @@ class _UploadPageState extends State<UploadPage> {
       theLocation = LatLng(userLocation.latitude, userLocation.longitude);
     }
 
-    List<geocoding.Placemark> placemarks = await geocoding
-        .placemarkFromCoordinates(theLocation.latitude, theLocation.longitude,
-            localeIdentifier: 'en');
-
+    List<geocoding.Placemark> placemarks =
+        await geocoding.placemarkFromCoordinates(theLocation.latitude, theLocation.longitude, localeIdentifier: 'en');
+    
     if (placemarks.isNotEmpty) {
       if (placemarks[0].locality != null && placemarks[0].locality != "") {
         setState(() {
@@ -286,16 +276,13 @@ class _UploadPageState extends State<UploadPage> {
   // send post to database
   void postToFireStore(String postUrl, String caption, String location) {
     DateTime timestamp = DateTime.now();
-    postReference
-        .doc(widget.userUpload.id)
-        .collection("userPosts")
-        .doc(postID)
-        .set({
+    postReference.doc(widget.userUpload.id).collection("userPosts").doc(postID).set({
       "postId": postID,
       "ownerId": widget.userUpload.id,
       "username": widget.userUpload.userName,
       "postUrl": postUrl,
       "caption": caption,
+      "contest": widget.contestName,
       "location": location,
       "timestamp": timestamp,
       "votes": {},
@@ -427,7 +414,6 @@ class _UploadPageState extends State<UploadPage> {
                     ),
                   ),
                 ),
-                //TODO add google maps package to set location
                 Row(
                   children: [
                     Expanded(
@@ -489,14 +475,13 @@ class _UploadPageState extends State<UploadPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              height: 10.0,
+              height: 15.0,
             ),
             Container(
               width: 200,
               height: 75,
               decoration: BoxDecoration(
-                border: Border.all(
-                    color: Theme.of(context).primaryColor, width: 4.0),
+                border: Border.all(color: Theme.of(context).primaryColor, width: 4.0),
                 borderRadius: BorderRadius.circular(20),
                 //border:
               ),
@@ -513,14 +498,13 @@ class _UploadPageState extends State<UploadPage> {
               ),
             ),
             Container(
-              height: 0.0,
+              height: 20.0,
             ),
             Container(
               width: 200,
               height: 75,
               decoration: BoxDecoration(
-                border: Border.all(
-                    color: Theme.of(context).primaryColor, width: 4.0),
+                border: Border.all(color: Theme.of(context).primaryColor, width: 4.0),
                 borderRadius: BorderRadius.circular(20),
                 //border:
               ),

@@ -20,12 +20,14 @@ class Post extends StatefulWidget {
   final String location;
   final String caption;
   final String posturl;
+  final String contest;
   final Timestamp timestamp;
   final Map votes;
 
   Post({
     this.postId,
     this.ownerId,
+    this.contest,
     this.username,
     this.location,
     this.caption,
@@ -41,6 +43,7 @@ class Post extends StatefulWidget {
       username: doc.data()['username'],
       location: doc.data()['location'],
       caption: doc.data()['caption'],
+      contest: doc.data()['contest'],
       posturl: doc.data()['postUrl'],
       votes: doc.data()['votes'],
       timestamp: doc.data()['timestamp'],
@@ -120,11 +123,12 @@ class _PostState extends State<Post> {
                 ),
               ),
               subtitle: GestureDetector(
-                  onTap: () => openMapLocation(location),
-                  child: Text(
-                    location,
-                    style: TextStyle(color: Colors.white),
-                  )),
+                onTap: () => openMapLocation(location),
+                child: Text(
+                  location,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
               trailing: userId == ownerId
                   ? IconButton(
                       icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color),
@@ -250,30 +254,47 @@ class _PostState extends State<Post> {
         Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 40.0, left: 15.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(top: 40.0, left: 15.0),
+                    ),
+                    GestureDetector(
+                      onTap: () => handleVotes(),
+                      child: Icon(
+                        Icons.arrow_upward_outlined,
+                        size: 31.0,
+                        color: isVotedEnabled ? Colors.green : Colors.white,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(right: 15.0),
+                    ),
+                    GestureDetector(
+                      onTap: () => openCommentsScreen(context, postId, ownerId, posturl),
+                      child: Icon(
+                        Icons.comment,
+                        size: 25.0,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                  ],
                 ),
-                GestureDetector(
-                  onTap: () => handleVotes(),
-                  child: Icon(
-                    Icons.arrow_upward_outlined,
-                    size: 31.0,
-                    color: isVotedEnabled ? Colors.green : Colors.white,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(right: 15.0),
-                ),
-                GestureDetector(
-                  onTap: () => openCommentsScreen(context, postId, ownerId, posturl),
-                  child: Icon(
-                    Icons.comment,
-                    size: 25.0,
-                    color: Theme.of(context).iconTheme.color,
-                  ),
-                ),
+                widget.contest == null || widget.contest == ""
+                    ? Container()
+                    : Container(
+                        margin: EdgeInsets.only(left: 15.0, right: 15.0),
+                        child: Text(
+                          "Contest: " + widget.contest,
+                          style: TextStyle(
+                            color: Theme.of(context).accentColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
               ],
             ),
             Row(
@@ -293,22 +314,25 @@ class _PostState extends State<Post> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  margin: EdgeInsets.only(left: 15.0),
-                  child: Text(
-                    '$username ',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(left: 15.0, right: 15.0),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '$username ',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(text: caption)
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Text(
-                    caption,
-                    style: TextStyle(color: Colors.white),
-                  ),
-                )
               ],
             ),
             Row(
