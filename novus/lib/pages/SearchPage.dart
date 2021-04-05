@@ -193,8 +193,10 @@ class _SearchPageState extends State<SearchPage>
                 padding: EdgeInsets.all(50),
               ),
               markers: snapshot.data,
-              polygonOptions: PolygonOptions(borderColor: Colors.purple[400], color: Clors.black12, borderStrokeWidth: 3),
-
+              polygonOptions: PolygonOptions(
+                  borderColor: Colors.purple[400],
+                  color: Colors.black12,
+                  borderStrokeWidth: 3),
               builder: (context, markers) {
                 return FloatingActionButton(
                   child: Text(markers.length.toString()),
@@ -250,7 +252,8 @@ getMarkers(BuildContext context) async {
   //ignore: deprecated_member_use
 
   for (var i = 0; i < userPostsList.length; i++) {
-    QuerySnapshot tempPosts = await postReference.doc(userPostsList[i]).collection('userPosts').get();
+    QuerySnapshot tempPosts =
+        await postReference.doc(userPostsList[i]).collection('userPosts').get();
     posts.addAll(tempPosts.docs.map((e) => Post.fromDocument(e)).toList());
     tempPosts.docs.clear();
   }
@@ -269,7 +272,8 @@ getMarkers(BuildContext context) async {
             point: LatLng(current[0].latitude, current[0].longitude),
             builder: (ctx) => Container(
               child: GestureDetector(
-                onTap: () => openPost(posts[i].ownerId, posts[i].postId, context),
+                onTap: () =>
+                    openPost(posts[i].ownerId, posts[i].postId, context),
                 child: CircleAvatar(
                   backgroundImage: CachedNetworkImageProvider(posts[i].posturl),
                 ),
