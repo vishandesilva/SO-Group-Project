@@ -172,9 +172,23 @@ class _ContestState extends State<Contest> {
                       children: [
                         Container(
                           padding: EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            "Description: " + widget.contestDescription,
-                            style: TextStyle(color: Colors.white, fontSize: 17.0),
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18.0,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Description: ',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                TextSpan(text: widget.contestDescription)
+                              ],
+                            ),
                           ),
                         ),
                         Container(
@@ -188,8 +202,22 @@ class _ContestState extends State<Contest> {
                               endTime: widget.endDate,
                               widgetBuilder: (context, CurrentRemainingTime time) {
                                 if (time == null) {
-                                  contestReference.doc(widget.contestId).update({'contestEnd': true});
-                                  userReference.doc(user.id).update({'points': FieldValue.increment(getScore(posts))});
+                                  bool temp;
+                                  contestReference
+                                      .doc(widget.contestId)
+                                      .collection('partcipants')
+                                      .doc(user.id)
+                                      .get()
+                                      .then((value) => temp = value.data()['pointsRecorded']);
+                                  print(temp);
+                                  if (!temp) {
+                                    userReference.doc(user.id).update({'points': FieldValue.increment(getScore(posts))});
+                                    contestReference
+                                        .doc(widget.contestId)
+                                        .collection("partcipants")
+                                        .doc(user.id)
+                                        .update({'pointsRecorded': true});
+                                  }
                                   lockPostButton = true;
                                   return TextButton(
                                     child: Text("View results"),
@@ -287,9 +315,23 @@ class _ContestState extends State<Contest> {
                                 }
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                                  child: Text(
-                                    'Time left: Days: ${time.days == null ? '0' : time.days}, Hours: ${time.hours == null ? '0' : time.hours}, Min: ${time.min == null ? '0' : time.min}',
-                                    style: TextStyle(color: Colors.white, fontSize: 17.0),
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: TextStyle(color: Colors.white, fontSize: 17.0),
+                                      children: [
+                                        TextSpan(
+                                          text: "Time left: ",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              'Days: ${time.days == null ? '0' : time.days}, Hours: ${time.hours == null ? '0' : time.hours}, Min: ${time.min == null ? '0' : time.min}',
+                                        )
+                                      ],
+                                    ),
                                   ),
                                 );
                               },
@@ -310,6 +352,7 @@ class _ContestState extends State<Contest> {
                                         builder: (context) => UploadPage(
                                           contestId: widget.contestId,
                                           contestUpload: true,
+                                          contestName: widget.contestName,
                                           userUpload: user,
                                         ),
                                       ),
@@ -696,6 +739,13 @@ class _ContestState extends State<Contest> {
                     contestReference.doc(widget.contestId).update({
                       'participants': FieldValue.arrayUnion([element.userId])
                     });
+
+                    contestReference
+                        .doc(widget.contestId)
+                        .collection("partcipants")
+                        .doc(element.userId)
+                        .set({"pointsRecorded": false});
+
                     DateTime timestamp = new DateTime.now();
                     notificationsReference.doc(element.userId).collection('notificationItems').doc().set({
                       'type': 'contest',

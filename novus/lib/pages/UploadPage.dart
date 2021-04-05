@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -25,9 +24,10 @@ class UploadPage extends StatefulWidget {
   final User userUpload;
   final bool contestUpload;
   final String contestId;
+  final String contestName;
   double lat;
   double long;
-  UploadPage({this.userUpload, this.contestUpload = false, this.contestId});
+  UploadPage({this.userUpload, this.contestUpload = false, this.contestId, this.contestName = ""});
 
   @override
   _UploadPageState createState() => _UploadPageState();
@@ -260,6 +260,7 @@ class _UploadPageState extends State<UploadPage> {
       "username": widget.userUpload.userName,
       "postUrl": postUrl,
       "caption": caption,
+      "contest": widget.contestName,
       "location": location,
       "timestamp": timestamp,
       "votes": {},
@@ -391,7 +392,6 @@ class _UploadPageState extends State<UploadPage> {
                     ),
                   ),
                 ),
-                //TODO add google maps package to set location
                 Row(
                   children: [
                     Expanded(
@@ -453,7 +453,7 @@ class _UploadPageState extends State<UploadPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              height: 10.0,
+              height: 15.0,
             ),
             Container(
               width: 200,
@@ -476,7 +476,7 @@ class _UploadPageState extends State<UploadPage> {
               ),
             ),
             Container(
-              height: 0.0,
+              height: 20.0,
             ),
             Container(
               width: 200,
