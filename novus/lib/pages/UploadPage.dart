@@ -255,6 +255,22 @@ class _UploadPageState extends State<UploadPage> {
             localeIdentifier: 'en');
 
     if (placemarks.isNotEmpty) {
+      if (placemarks[0].locality != null && placemarks[0].locality != "") {
+        setState(() {
+          locationController.text =
+              placemarks[0].locality + ", " + placemarks[0].country;
+        });
+      } else {
+        setState(() {
+          locationController.text = placemarks[0].country;
+        });
+      }
+    } else if (placemarks.isEmpty) {
+      theLocation = LatLng(userLocation.latitude, userLocation.longitude);
+      placemarks = await geocoding.placemarkFromCoordinates(
+          theLocation.latitude, theLocation.longitude,
+          localeIdentifier: 'en');
+
       setState(() {
         locationController.text =
             placemarks[0].locality + ", " + placemarks[0].country;
