@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "822523635854",
+    "project_id": "novus-app-eed91",
+    "storage_bucket": "novus-app-eed91.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:822523635854:android:d0d55df151bf86fdcfc1df",
+        "android_client_info": {
+          "package_name": "com.example.novus"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "822523635854-1bml9c7etsg1em712fsefo1067cmh18t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.novus",
+            "certificate_hash": "86399d1a7bc2b8ad006afd91d0f93510ffacd27b"
+          }
+        },
+        {
+          "client_id": "822523635854-tr9subvn2e7tdj7o1a6ijv95uqja6sr6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUTy_p1lgvFlPBaqTMZi5rtrB0DLRPBHA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "822523635854-tr9subvn2e7tdj7o1a6ijv95uqja6sr6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
