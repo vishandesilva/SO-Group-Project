@@ -229,6 +229,9 @@ class _ContestsPageState extends State<ContestsPage> {
                         'participants': [widget.userId],
                         'hostUsername': user.userName,
                       });
+
+                      contestReference.doc(df.id).collection("partcipants").doc(user.id).set({"pointsRecorded": false});
+
                       contestNameController.clear();
                       contestDesriptionController.clear();
                       contestDurationController.clear();
@@ -331,7 +334,7 @@ class ContestTile extends StatelessWidget {
         style: TextStyle(color: Colors.white, fontSize: 20.0),
       ),
       subtitle: Text(
-        "Host by " + hostUsername,
+        "Hosted by " + hostUsername,
         style: TextStyle(color: Colors.grey),
       ),
       trailing: !contestEnd

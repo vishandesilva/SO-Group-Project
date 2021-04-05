@@ -362,15 +362,18 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
     List<GridTile> gridTiles = [];
-    posts.forEach((element) {
-      gridTiles.add(
-        GridTile(
-          child: PostTile(
-            post: element,
+    posts.forEach(
+      (element) {
+        gridTiles.add(
+          GridTile(
+            child: PostTile(
+              post: element,
+              isProfilePage: true,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
     return GridView.count(
       children: gridTiles,
       crossAxisSpacing: 2.0,
