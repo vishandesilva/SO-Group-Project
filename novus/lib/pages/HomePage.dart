@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:gradient_text/gradient_text.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/ContestPage.dart';
 import 'package:novus/pages/CreateAccountPage.dart';
@@ -20,6 +21,7 @@ final postReference = FirebaseFirestore.instance.collection("posts");
 final commentsReference = FirebaseFirestore.instance.collection("comments");
 final notificationsReference = FirebaseFirestore.instance.collection("notifications");
 final contestReference = FirebaseFirestore.instance.collection("contests");
+final chatReference = FirebaseFirestore.instance.collection("chats");
 // reference point to firbase storage consisting of all media files
 final Reference storageReference = FirebaseStorage.instance.ref();
 // place holder for the current user details
@@ -135,8 +137,16 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Image(image: AssetImage("assets/images/novus-logo.png"), height: 75.0),
-                  Text(
+                  GradientText(
                     "OVUS",
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                      colors: [
+                        Theme.of(context).primaryColor,
+                        Theme.of(context).accentColor,
+                      ],
+                    ),
                     style: TextStyle(
                       color: Theme.of(context).primaryColor,
                       fontSize: 75.0,
@@ -232,6 +242,7 @@ class _HomePageState extends State<HomePage> {
         'email': googleSignInAccount.email,
         'photoUrl': googleSignInAccount.photoUrl,
         'bio': '',
+        'points': 0,
         //'dateCreated': timeStamp
       });
       documentSnapshot = await userReference.doc(googleSignInAccount.id).get();

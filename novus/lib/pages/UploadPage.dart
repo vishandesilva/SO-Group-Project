@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:image_picker/image_picker.dart';
@@ -110,7 +111,8 @@ class _UploadPageState extends State<UploadPage> {
         return;
       }
       SnackBar snackBar = SnackBar(
-        content: Text('The selected image contains faces which are not allowed'),
+        content:
+            Text('The selected image contains faces which are not allowed'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
@@ -203,11 +205,13 @@ class _UploadPageState extends State<UploadPage> {
   compressImage() async {
     final tempDirectory = await getTemporaryDirectory();
     final path = tempDirectory.path;
-    imageLib.Image tempImageFile = imageLib.decodeImage(postImage.readAsBytesSync());
-    final compressedImageFile = File('$path/img_$postID.jpg')..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
+    imageLib.Image tempImageFile =
+        imageLib.decodeImage(postImage.readAsBytesSync());
+    final compressedImageFile = File('$path/img_$postID.jpg')
+      ..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
     setState(() => postImage = compressedImageFile);
   }
-  
+
   getLocation() async {
     Location location = new Location();
     bool _serviceEnabled;
@@ -250,10 +254,12 @@ class _UploadPageState extends State<UploadPage> {
         .placemarkFromCoordinates(theLocation.latitude, theLocation.longitude,
             localeIdentifier: 'en');
 
-    setState(() {
-      locationController.text =
-          placemarks[0].locality + ", " + placemarks[0].country;
-    });
+    if (placemarks.isNotEmpty) {
+      setState(() {
+        locationController.text =
+            placemarks[0].locality + ", " + placemarks[0].country;
+      });
+    }
   }
 
   setLocation(double lat, double long) {
@@ -406,25 +412,51 @@ class _UploadPageState extends State<UploadPage> {
                   ),
                 ),
                 //TODO add google maps package to set location
-                Container(
-                  width: 200,
-                  height: 70,
-                  alignment: Alignment.center,
-                  child: RaisedButton.icon(
-                    label: Text(
-                      "Pin your Location!",
-                      style: TextStyle(color: Colors.white),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 70,
+                        alignment: Alignment.center,
+                        child: RaisedButton.icon(
+                          label: Text(
+                            "Pin location",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          icon: Icon(
+                            Icons.pin_drop_outlined,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          color: Theme.of(context).primaryColor,
+                          onPressed: () => getLocation(),
+                        ),
+                      ),
                     ),
-                    icon: Icon(
-                      Icons.pin_drop_outlined,
-                      color: Theme.of(context).iconTheme.color,
+                    Expanded(
+                      child: Container(
+                        height: 70,
+                        alignment: Alignment.center,
+                        child: RaisedButton.icon(
+                          label: Text(
+                            "Add tags",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          icon: Icon(
+                            CupertinoIcons.tag,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          color: Theme.of(context).primaryColor,
+                          onPressed: () => getLocation(),
+                        ),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                    color: Theme.of(context).primaryColor,
-                    onPressed: () => getLocation(),
-                  ),
+                  ],
                 )
               ],
             ),
@@ -435,63 +467,63 @@ class _UploadPageState extends State<UploadPage> {
   Scaffold buildUploadScreen() {
     return Scaffold(
       key: _scaffoldKey,
-      appBar: header(context, title: 'Post Photo', enableBackButton: true),
+      appBar: header(context, title: 'Post photo'),
       body: Container(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.camera_alt_outlined,
-                size: 100.0,
-                color: Theme.of(context).buttonColor,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 10.0,
+            ),
+            Container(
+              width: 200,
+              height: 75,
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: Theme.of(context).primaryColor, width: 4.0),
+                borderRadius: BorderRadius.circular(20),
+                //border:
               ),
-              Padding(
-                padding: EdgeInsets.all(14.0),
-                child: Container(
-                  width: 200.0,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue, width: 4.0),
-                    borderRadius: BorderRadius.circular(20),
-                    //border:
-                  ),
-                  child: TextButton(
-                    onPressed: () => takePhoto(),
-                    child: Text(
-                      "Take a Photo",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
+              child: TextButton(
+                onPressed: () => takePhoto(),
+                child: Text(
+                  "Take a Photo",
+                  style: TextStyle(
+                    color: Theme.of(context).accentColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
                   ),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.all(14.0),
-                child: Container(
-                  width: 200.0,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue, width: 4.0),
-                    borderRadius: BorderRadius.circular(20),
-                    //border:
-                  ),
-                  child: TextButton(
-                    onPressed: () => galleryPhoto(context),
-                    child: Text(
-                      "From Gallery",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
+            ),
+            Container(
+              height: 0.0,
+            ),
+            Container(
+              width: 200,
+              height: 75,
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: Theme.of(context).primaryColor, width: 4.0),
+                borderRadius: BorderRadius.circular(20),
+                //border:
+              ),
+              child: TextButton(
+                onPressed: () => galleryPhoto(context),
+                child: Text(
+                  "From Gallery",
+                  style: TextStyle(
+                    color: Theme.of(context).accentColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
                   ),
                 ),
-              )
-            ],
-          ),
+              ),
+            ),
+            Container(
+              height: 10.0,
+            ),
+          ],
         ),
       ),
     );

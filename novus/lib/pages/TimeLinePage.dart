@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/widgets/HeaderWidget.dart';
 import 'package:novus/widgets/PostWidget.dart';
@@ -36,7 +37,7 @@ class _TimeLinePageState extends State<TimeLinePage> {
   }
 
   Future _refreshData() async {
-    await Future.delayed(Duration(seconds: 3));
+    //await Future.delayed(Duration(seconds: 3));
     setState(() {});
   }
 
@@ -47,7 +48,6 @@ class _TimeLinePageState extends State<TimeLinePage> {
     userFollowingIds.docs.forEach((element) {
       userPostsList.add(element.id);
     });
-    //ignore: deprecated_member_use
 
     List<Post> posts = [];
     for (var i = 0; i < userPostsList.length; i++) {

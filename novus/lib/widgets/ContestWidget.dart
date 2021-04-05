@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_countdown_timer/current_remaining_time.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
+import 'package:gradient_text/gradient_text.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/UploadPage.dart';
@@ -76,8 +77,16 @@ class _ContestState extends State<Contest> {
               color: Theme.of(context).accentColor,
             ),
           ),
-          title: Text(
-            "Topic: " + widget.contestName,
+          title: GradientText(
+            widget.contestName,
+            gradient: LinearGradient(
+              begin: Alignment.bottomLeft,
+              end: Alignment.topRight,
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).accentColor,
+              ],
+            ),
             style: TextStyle(
               color: Theme.of(context).primaryColor,
               fontSize: 25.0,
@@ -180,12 +189,11 @@ class _ContestState extends State<Contest> {
                               widgetBuilder: (context, CurrentRemainingTime time) {
                                 if (time == null) {
                                   contestReference.doc(widget.contestId).update({'contestEnd': true});
+                                  userReference.doc(user.id).update({'points': FieldValue.increment(getScore(posts))});
+                                  lockPostButton = true;
                                   return TextButton(
                                     child: Text("View results"),
                                     onPressed: () {
-                                      setState(() {
-                                        lockPostButton = true;
-                                      });
                                       return showDialog(
                                         context: context,
                                         builder: (context) {
@@ -606,8 +614,9 @@ class _ContestState extends State<Contest> {
           tempIDs.add(element.id);
         });
 
-        for (var i = 0; i < tempIDs.length; i++) {
-          DocumentSnapshot snapshot = await postReference.doc(user.id).collection('userPosts').doc(tempIDs[i]).get();
+        for (var j = 0; j < tempIDs.length; j++) {
+          DocumentSnapshot snapshot =
+              await postReference.doc(widget.participants[i]).collection('userPosts').doc(tempIDs[j]).get();
           tempPosts.add(Post.fromDocument(snapshot));
         }
       }
@@ -687,6 +696,15 @@ class _ContestState extends State<Contest> {
                     contestReference.doc(widget.contestId).update({
                       'participants': FieldValue.arrayUnion([element.userId])
                     });
+                    DateTime timestamp = new DateTime.now();
+                    notificationsReference.doc(element.userId).collection('notificationItems').doc().set({
+                      'type': 'contest',
+                      'username': user.userName,
+                      'userId': user.id,
+                      'photoUrl': user.url,
+                      'commentData': widget.contestName,
+                      'timestamp': timestamp,
+                    });
                   }
                 });
                 addUsers.clear();
@@ -758,13 +776,15 @@ class _ContestState extends State<Contest> {
     if (!tempSnapshot.exists) {
       DocumentSnapshot hostUserSnapshot = await userReference.doc(widget.hostUserId).get();
       User hostUser = User.fromDocument(hostUserSnapshot);
-      userReference.doc(user.id).collection('achievements').doc(widget.contestId).set({
-        'score': userPlacement.score,
-        'rank': userPlacement.rank,
-        'contestId': widget.contestId,
-        'contestName': widget.contestName,
-        'hostName': hostUser.userName,
-      });
+      userReference.doc(user.id).collection('achievements').doc(widget.contestId).set(
+        {
+          'score': userPlacement.score,
+          'rank': userPlacement.rank,
+          'contestId': widget.contestId,
+          'contestName': widget.contestName,
+          'hostName': hostUser.userName,
+        },
+      );
     }
   }
 }

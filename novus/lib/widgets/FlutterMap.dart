@@ -36,18 +36,13 @@ class _FlutterMapMakeState extends State<FlutterMapMake> {
 
       //Map---------------------------------
       body: FlutterMap(
-          options: MapOptions(
-              center: LatLng(widget.lat, widget.long),
-              zoom: 8,
-              maxZoom: 19,
-              plugins: [
-                DragMarkerPlugin(),
-              ]),
+          options: MapOptions(center: LatLng(widget.lat, widget.long), zoom: 8, maxZoom: 19, plugins: [
+            DragMarkerPlugin(),
+          ]),
           children: [
             TileLayerWidget(
               options: TileLayerOptions(
-                urlTemplate:
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 subdomains: ['a', 'b', 'c'],
                 maxZoom: 19,
               ),
@@ -77,11 +72,9 @@ class _FlutterMapMakeState extends State<FlutterMapMake> {
                   width: 80.0,
                   height: 80.0,
                   offset: Offset(0.0, -8.0),
-                  builder: (ctx) =>
-                      Container(child: Icon(Icons.location_on, size: 50)),
+                  builder: (ctx) => Container(child: Icon(Icons.location_on, size: 50)),
                   onDragStart: (details, point) => print("Start point $point"),
-                  onDragEnd: (details, point) =>
-                      {print("End point $point"), coordinates = point},
+                  onDragEnd: (details, point) => {print("End point $point"), coordinates = point},
                   onDragUpdate: (details, point) {},
                   onTap: (point) {
                     print("on tap");
@@ -89,11 +82,9 @@ class _FlutterMapMakeState extends State<FlutterMapMake> {
                   onLongPress: (point) {
                     print("on long press");
                   },
-                  feedbackBuilder: (ctx) =>
-                      Container(child: Icon(Icons.edit_location, size: 75)),
+                  feedbackBuilder: (ctx) => Container(child: Icon(Icons.edit_location, size: 75)),
                   feedbackOffset: Offset(0.0, -18.0),
-                  updateMapNearEdge:
-                      true, // Experimental, move the map when marker close to edge
+                  updateMapNearEdge: true, // Experimental, move the map when marker close to edge
                   nearEdgeRatio: 2.0, // Experimental
                   nearEdgeSpeed: 1.0, // Experimental
                 )
@@ -143,18 +134,13 @@ class _SimpleMapMakeState extends State<SimpleMapMake> {
 
       //Map---------------------------------
       body: FlutterMap(
-          options: MapOptions(
-              center: LatLng(widget.lat, widget.long),
-              zoom: 4,
-              maxZoom: 19,
-              plugins: [
-                DragMarkerPlugin(),
-              ]),
+          options: MapOptions(center: LatLng(widget.lat, widget.long), zoom: 4, maxZoom: 19, plugins: [
+            DragMarkerPlugin(),
+          ]),
           children: [
             TileLayerWidget(
               options: TileLayerOptions(
-                urlTemplate:
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 subdomains: ['a', 'b', 'c'],
                 maxZoom: 19,
               ),
@@ -167,8 +153,7 @@ class _SimpleMapMakeState extends State<SimpleMapMake> {
                     width: 80.0,
                     height: 80.0,
                     point: LatLng(widget.lat, widget.long),
-                    builder: (ctx) =>
-                        Container(child: Icon(Icons.location_on, size: 50))),
+                    builder: (ctx) => Container(child: Icon(Icons.location_on, size: 50))),
               ],
             )
           ]),

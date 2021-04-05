@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import "package:flutter/material.dart";
+import 'package:gradient_text/gradient_text.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:novus/models/user.dart';
@@ -54,10 +55,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         brightness: Brightness.dark,
         automaticallyImplyLeading: true,
-        title: Text(
-          "Edit Profile",
+        title: GradientText(
+          "Edit profile",
+          gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).accentColor,
+            ],
+          ),
           style: TextStyle(
-            color: Colors.purple,
+            color: Theme.of(context).primaryColor,
             fontSize: 25.0,
           ),
         ),

@@ -103,28 +103,29 @@ class _SearchPageState extends State<SearchPage>
   //TODO add screen when there is no search results
   foundSearchResults() {
     return StreamBuilder(
-        stream: searchResults,
-        builder: (context, currentSnapshot) {
-          if (!currentSnapshot.hasData) {
-            return circularProgress();
-          }
-          if (searchResults.first != null) {
-            List<UserResult> searchedResults = [];
-            currentSnapshot.data.docs.forEach(
-              (document) => searchedResults.add(
-                UserResult(
-                  User.fromDocument(document),
-                ),
+      stream: searchResults,
+      builder: (context, currentSnapshot) {
+        if (!currentSnapshot.hasData) {
+          return circularProgress();
+        }
+        if (searchResults.first != null) {
+          List<UserResult> searchedResults = [];
+          currentSnapshot.data.docs.forEach(
+            (document) => searchedResults.add(
+              UserResult(
+                User.fromDocument(document),
               ),
-            );
-            return ListView(children: searchedResults);
-          } else {
-            return Text(
-              "Fsfsfsf",
-              style: TextStyle(color: Colors.white),
-            );
-          }
-        });
+            ),
+          );
+          return ListView(children: searchedResults);
+        } else {
+          return Text(
+            "Fsfsfsf",
+            style: TextStyle(color: Colors.white),
+          );
+        }
+      },
+    );
   }
 
   //TODO if search cant be found
@@ -266,14 +267,19 @@ getMarkers(BuildContext context) async {
       if (current != null) {
         try {
           currentMark = new Marker(
-              width: 80.0,
-              height: 80.0,
-              point: LatLng(current[0].latitude, current[0].longitude),
-              builder: (ctx) => Container(
-                  child: GestureDetector(
-                      onTap: () =>
-                          openPost(posts[i].ownerId, posts[i].postId, context),
-                      child: Icon(Icons.location_on, size: 50))));
+            width: 40.0,
+            height: 40.0,
+            point: LatLng(current[0].latitude, current[0].longitude),
+            builder: (ctx) => Container(
+              child: GestureDetector(
+                onTap: () =>
+                    openPost(posts[i].ownerId, posts[i].postId, context),
+                child: CircleAvatar(
+                  backgroundImage: CachedNetworkImageProvider(posts[i].posturl),
+                ),
+              ),
+            ),
+          );
           markers.add(currentMark);
         } on NoSuchMethodError catch (e) {
           print(e);

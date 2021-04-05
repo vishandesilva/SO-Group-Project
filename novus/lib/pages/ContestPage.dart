@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gradient_text/gradient_text.dart';
 import 'package:novus/widgets/ContestWidget.dart';
-import 'package:novus/widgets/HeaderWidget.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
-import 'package:timeago/timeago.dart' as timeago;
-
 import 'HomePage.dart';
 
 class ContestsPage extends StatefulWidget {
@@ -27,8 +25,16 @@ class _ContestsPageState extends State<ContestsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: GradientText(
           "Contests",
+          gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+            colors: [
+              Theme.of(context).primaryColor,
+              Theme.of(context).accentColor,
+            ],
+          ),
           style: TextStyle(
             color: Theme.of(context).primaryColor,
             fontSize: 25.0,
@@ -88,7 +94,6 @@ class _ContestsPageState extends State<ContestsPage> {
       context: context,
       builder: (context) {
         bool _contestName = true;
-
         bool _contestDuration = true;
         return StatefulBuilder(
           builder: (context, setState) {
