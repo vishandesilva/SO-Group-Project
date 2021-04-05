@@ -739,13 +739,11 @@ class _ContestState extends State<Contest> {
                     contestReference.doc(widget.contestId).update({
                       'participants': FieldValue.arrayUnion([element.userId])
                     });
-
                     contestReference
                         .doc(widget.contestId)
                         .collection("partcipants")
                         .doc(element.userId)
                         .set({"pointsRecorded": false});
-
                     DateTime timestamp = new DateTime.now();
                     notificationsReference.doc(element.userId).collection('notificationItems').doc().set({
                       'type': 'contest',

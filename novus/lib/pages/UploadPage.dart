@@ -111,7 +111,8 @@ class _UploadPageState extends State<UploadPage> {
         return;
       }
       SnackBar snackBar = SnackBar(
-        content: Text('The selected image contains faces which are not allowed'),
+        content:
+            Text('The selected image contains faces which are not allowed'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
@@ -196,8 +197,10 @@ class _UploadPageState extends State<UploadPage> {
   compressImage() async {
     final tempDirectory = await getTemporaryDirectory();
     final path = tempDirectory.path;
-    imageLib.Image tempImageFile = imageLib.decodeImage(postImage.readAsBytesSync());
-    final compressedImageFile = File('$path/img_$postID.jpg')..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
+    imageLib.Image tempImageFile =
+        imageLib.decodeImage(postImage.readAsBytesSync());
+    final compressedImageFile = File('$path/img_$postID.jpg')
+      ..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
     setState(() => postImage = compressedImageFile);
   }
 
@@ -240,10 +243,29 @@ class _UploadPageState extends State<UploadPage> {
 
     List<geocoding.Placemark> placemarks =
         await geocoding.placemarkFromCoordinates(theLocation.latitude, theLocation.longitude, localeIdentifier: 'en');
+    
+    if (placemarks.isNotEmpty) {
+      if (placemarks[0].locality != null && placemarks[0].locality != "") {
+        setState(() {
+          locationController.text =
+              placemarks[0].locality + ", " + placemarks[0].country;
+        });
+      } else {
+        setState(() {
+          locationController.text = placemarks[0].country;
+        });
+      }
+    } else if (placemarks.isEmpty) {
+      theLocation = LatLng(userLocation.latitude, userLocation.longitude);
+      placemarks = await geocoding.placemarkFromCoordinates(
+          theLocation.latitude, theLocation.longitude,
+          localeIdentifier: 'en');
 
-    setState(() {
-      locationController.text = placemarks[0].locality + ", " + placemarks[0].country;
-    });
+      setState(() {
+        locationController.text =
+            placemarks[0].locality + ", " + placemarks[0].country;
+      });
+    }
   }
 
   setLocation(double lat, double long) {

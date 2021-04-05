@@ -18,7 +18,8 @@ class SearchPage extends StatefulWidget {
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMixin<SearchPage> {
+class _SearchPageState extends State<SearchPage>
+    with AutomaticKeepAliveClientMixin<SearchPage> {
   // controller for the textfield
   TextEditingController textEditingController = TextEditingController();
   // place holder for user profiles to display on search screen
@@ -80,7 +81,8 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
           ),
         ),
         body: GestureDetector(
-          onTap: () => WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
+          onTap: () =>
+              WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
           child: TabBarView(
             physics: NeverScrollableScrollPhysics(),
             children: [
@@ -137,7 +139,8 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
           padding: EdgeInsets.symmetric(vertical: 200),
           child: Text(
             'Search For Users',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 40),
+            style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w400, fontSize: 40),
           ),
         ),
       ],
@@ -146,7 +149,9 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
 
   // query the database for usernames on submission in textfield
   performSearch(String searchName) {
-    Stream<QuerySnapshot> allUsers = userReference.where('profileName', isGreaterThanOrEqualTo: searchName).snapshots();
+    Stream<QuerySnapshot> allUsers = userReference
+        .where('profileName', isGreaterThanOrEqualTo: searchName)
+        .snapshots();
     if (this.mounted) setState(() => searchResults = allUsers);
   }
 
@@ -188,7 +193,8 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
                 padding: EdgeInsets.all(50),
               ),
               markers: snapshot.data,
-              polygonOptions: PolygonOptions(borderColor: Colors.purple[400], color: Colors.black12, borderStrokeWidth: 3),
+              polygonOptions: PolygonOptions(borderColor: Colors.purple[400], color: Clors.black12, borderStrokeWidth: 3),
+
               builder: (context, markers) {
                 return FloatingActionButton(
                   child: Text(markers.length.toString()),
@@ -213,7 +219,10 @@ class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMi
     //ignore: deprecated_member_use
     List<Post> posts = [];
     for (var i = 0; i < userPostsList.length; i++) {
-      QuerySnapshot tempPosts = await postReference.doc(userPostsList[i]).collection('userPosts').get();
+      QuerySnapshot tempPosts = await postReference
+          .doc(userPostsList[i])
+          .collection('userPosts')
+          .get();
       posts.addAll(tempPosts.docs.map((e) => Post.fromDocument(e)).toList());
       tempPosts.docs.clear();
     }
