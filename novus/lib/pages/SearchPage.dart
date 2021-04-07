@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:geocoding/geocoding.dart';
@@ -242,7 +243,26 @@ getMarkers(BuildContext context) async {
 
   for (int i = 0; i < posts.length; i++) {
     try {
-      current = await locationFromAddress(posts[i].location);
+      try {
+        current = await locationFromAddress(posts[i].location);
+        if (current == null) {
+          posts.removeAt(i);
+        }
+      } on PlatformException catch (e) {
+        print(e);
+      }
+    } on NoResultFoundException catch (e) {
+      print(e);
+    }
+  }
+
+  for (int i = 0; i < posts.length; i++) {
+    try {
+      try {
+        current = await locationFromAddress(posts[i].location);
+      } on PlatformException catch (e) {
+        print(e);
+      }
 
       if (current != null) {
         try {
@@ -252,7 +272,8 @@ getMarkers(BuildContext context) async {
             point: LatLng(current[0].latitude, current[0].longitude),
             builder: (ctx) => Container(
               child: GestureDetector(
-                onTap: () => openPost(posts[i].ownerId, posts[i].postId, context),
+                onTap: () =>
+                    openPost(posts[i].ownerId, posts[i].postId, context),
                 child: CircleAvatar(
                   backgroundImage: CachedNetworkImageProvider(posts[i].posturl),
                 ),
