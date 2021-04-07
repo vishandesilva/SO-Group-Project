@@ -245,21 +245,6 @@ getMarkers(BuildContext context) async {
     try {
       try {
         current = await locationFromAddress(posts[i].location);
-        if (current == null) {
-          posts.removeAt(i);
-        }
-      } on PlatformException catch (e) {
-        print(e);
-      }
-    } on NoResultFoundException catch (e) {
-      print(e);
-    }
-  }
-
-  for (int i = 0; i < posts.length; i++) {
-    try {
-      try {
-        current = await locationFromAddress(posts[i].location);
       } on PlatformException catch (e) {
         print(e);
       }
