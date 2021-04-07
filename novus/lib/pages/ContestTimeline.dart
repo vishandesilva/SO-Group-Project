@@ -33,27 +33,28 @@ class _ContestTimelineState extends State<ContestTimeline> {
   @override
   Widget build(context) {
     return Scaffold(
-        appBar: AppBar(
-          iconTheme: Theme.of(context).iconTheme,
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          brightness: Brightness.dark,
-          title: Text(
-            "Posts by " + widget.profileName,
-            style: TextStyle(color: Colors.white),
-          ),
+      appBar: AppBar(
+        iconTheme: Theme.of(context).iconTheme,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        brightness: Brightness.dark,
+        title: Text(
+          "Posts by " + widget.profileName,
+          style: TextStyle(color: Colors.white),
         ),
-        body: isLoading
-            ? circularProgress()
-            : posts.isEmpty
-                ? Center(
-                    child: Container(
-                      child: Text(
-                        "No entries yet",
-                        style: TextStyle(color: Colors.white),
-                      ),
+      ),
+      body: isLoading
+          ? circularProgress()
+          : posts.isEmpty
+              ? Center(
+                  child: Container(
+                    child: Text(
+                      "No entries yet",
+                      style: TextStyle(color: Colors.white),
                     ),
-                  )
-                : ListView(children: posts));
+                  ),
+                )
+              : ListView(children: posts),
+    );
   }
 
   getPosts() async {

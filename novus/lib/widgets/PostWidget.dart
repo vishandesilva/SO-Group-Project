@@ -2,13 +2,16 @@ import 'dart:async';
 import 'package:animator/animator.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/CommentsPage.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/ProfilePage.dart';
+import 'package:novus/widgets/EditPost.dart';
 import 'package:novus/widgets/FlutterMap.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
+import 'package:novus/widgets/TagsPosts.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -21,6 +24,7 @@ class Post extends StatefulWidget {
   final String caption;
   final String posturl;
   final String contest;
+  final List tags;
   final Timestamp timestamp;
   final Map votes;
 
@@ -33,6 +37,7 @@ class Post extends StatefulWidget {
     this.caption,
     this.posturl,
     this.votes,
+    this.tags,
     this.timestamp,
   });
 
@@ -46,6 +51,7 @@ class Post extends StatefulWidget {
       contest: doc.data()['contest'],
       posturl: doc.data()['postUrl'],
       votes: doc.data()['votes'],
+      tags: doc.data()['tags'],
       timestamp: doc.data()['timestamp'],
     );
   }
@@ -69,12 +75,14 @@ class Post extends StatefulWidget {
         location: this.location,
         posturl: this.posturl,
         username: this.username,
+        tags: this.tags,
         timestamp: this.timestamp,
       );
 }
 
 class _PostState extends State<Post> {
   final String postId;
+  final List tags;
   final String ownerId;
   final String username;
   final String location;
@@ -89,6 +97,7 @@ class _PostState extends State<Post> {
 
   _PostState({
     this.postId,
+    this.tags,
     this.ownerId,
     this.username,
     this.location,
@@ -129,90 +138,153 @@ class _PostState extends State<Post> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-              trailing: userId == ownerId
-                  ? IconButton(
-                      icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color),
-                      onPressed: () => showDialog(
-                        context: context,
-                        builder: (context) {
-                          return SimpleDialog(
-                            contentPadding: EdgeInsets.all(0.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20.0),
-                            ),
-                            backgroundColor: Colors.grey[900],
-                            title: Center(
-                              child: Column(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: Text(
-                                      "Delete this post?",
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 15.0, left: 20.0, right: 20.0),
-                                    child: Text(
-                                      "This action will remove this post from your profile and cannot be undone.",
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.normal,
-                                        fontSize: 15.0,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            children: <Widget>[
-                              Container(
-                                height: 0.10,
-                                color: Colors.white,
-                              ),
-                              SimpleDialogOption(
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: Text(
-                                      "Delete",
-                                      style: TextStyle(
-                                        color: Theme.of(context).accentColor,
-                                        fontSize: 17.0,
-                                      ),
-                                    ),
-                                  ),
+              trailing: IconButton(
+                icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color),
+                onPressed: () => showModalBottomSheet(
+                  backgroundColor: Colors.grey[900],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20.0),
+                      topRight: Radius.circular(20.0),
+                    ),
+                  ),
+                  context: context,
+                  builder: (context) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        userId == ownerId
+                            ? ListTile(
+                                title: Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.white),
                                 ),
-                                onPressed: () {
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return SimpleDialog(
+                                        contentPadding: EdgeInsets.all(0.0),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20.0),
+                                        ),
+                                        backgroundColor: Colors.grey[900],
+                                        title: Center(
+                                          child: Column(
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.all(5.0),
+                                                child: Text(
+                                                  "Delete this post?",
+                                                  style: TextStyle(color: Colors.white),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(bottom: 15.0, left: 20.0, right: 20.0),
+                                                child: Text(
+                                                  "This action will remove this post from your profile and cannot be undone.",
+                                                  style: TextStyle(
+                                                    color: Colors.grey,
+                                                    fontWeight: FontWeight.normal,
+                                                    fontSize: 15.0,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        children: <Widget>[
+                                          Container(
+                                            height: 0.10,
+                                            color: Colors.white,
+                                          ),
+                                          SimpleDialogOption(
+                                            child: Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(5.0),
+                                                child: Text(
+                                                  "Delete",
+                                                  style: TextStyle(
+                                                    color: Theme.of(context).accentColor,
+                                                    fontSize: 17.0,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              deletePost();
+                                            },
+                                          ),
+                                          Container(
+                                            height: 0.10,
+                                            color: Colors.white,
+                                          ),
+                                          SimpleDialogOption(
+                                            child: Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(5.0),
+                                                child: Text(
+                                                  "Cancel",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 17.0,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            onPressed: () => Navigator.pop(context),
+                                          )
+                                        ],
+                                      );
+                                    },
+                                  );
                                   Navigator.pop(context);
-                                  deletePost();
                                 },
-                              ),
-                              Container(
-                                height: 0.10,
-                                color: Colors.white,
-                              ),
-                              SimpleDialogOption(
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: Text(
-                                      "Cancel",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 17.0,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                onPressed: () => Navigator.pop(context),
                               )
-                            ],
-                          );
-                        },
-                      ),
-                    )
-                  : null,
+                            : Container(),
+                        userId != ownerId
+                            ? ListTile(
+                                title: new Text(
+                                  'Report',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                              )
+                            : Container(),
+                        userId == ownerId
+                            ? ListTile(
+                                title: new Text(
+                                  'Edit',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                onTap: () async {
+                                  await pushNewScreen(
+                                    context,
+                                    screen: EditPost(
+                                      caption: caption,
+                                      contest: widget.contest,
+                                      location: location,
+                                      ownerId: ownerId,
+                                      postId: postId,
+                                      posturl: posturl,
+                                      username: username,
+                                    ),
+                                    withNavBar: true, // OPTIONAL VALUE. True by default.
+                                    pageTransitionAnimation: PageTransitionAnimation.fade,
+                                  );
+                                  Navigator.pop(context);
+                                  setState(() {});
+                                },
+                              )
+                            : Container(),
+                      ],
+                    );
+                  },
+                ),
+              ),
             );
           },
         ),
@@ -260,13 +332,13 @@ class _PostState extends State<Post> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(top: 40.0, left: 15.0),
+                      padding: EdgeInsets.only(top: 35.0, left: 15.0),
                     ),
                     GestureDetector(
                       onTap: () => handleVotes(),
                       child: Icon(
-                        Icons.arrow_upward_outlined,
-                        size: 31.0,
+                        CupertinoIcons.arrow_up,
+                        size: 28.0,
                         color: isVotedEnabled ? Colors.green : Colors.white,
                       ),
                     ),
@@ -276,8 +348,19 @@ class _PostState extends State<Post> {
                     GestureDetector(
                       onTap: () => openCommentsScreen(context, postId, ownerId, posturl),
                       child: Icon(
-                        Icons.comment,
-                        size: 25.0,
+                        CupertinoIcons.chat_bubble,
+                        size: 28.0,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(right: 15.0),
+                    ),
+                    GestureDetector(
+                      onTap: () => showTags(),
+                      child: Icon(
+                        CupertinoIcons.tag,
+                        size: 28.0,
                         color: Theme.of(context).iconTheme.color,
                       ),
                     ),
@@ -286,7 +369,7 @@ class _PostState extends State<Post> {
                 widget.contest == null || widget.contest == ""
                     ? Container()
                     : Container(
-                        margin: EdgeInsets.only(left: 15.0, right: 15.0),
+                        margin: EdgeInsets.only(right: 15.0),
                         child: Text(
                           "Contest: " + widget.contest,
                           style: TextStyle(
@@ -486,5 +569,91 @@ class _PostState extends State<Post> {
     });
 
     setState(() {});
+  }
+
+  showTags() {
+    tags != null
+        ? showDialog(
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  return SimpleDialog(
+                    contentPadding: EdgeInsets.all(0.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    backgroundColor: Colors.grey[900],
+                    title: Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: Container(
+                        width: double.maxFinite,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Text(
+                                "Tags",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                            Container(
+                              height: 300,
+                              width: double.maxFinite,
+                              child: ListView.builder(
+                                padding: EdgeInsets.all(8.0),
+                                shrinkWrap: true,
+                                itemCount: tags.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  return ActionChip(
+                                    backgroundColor: Theme.of(context).accentColor,
+                                    label: Text(tags[index]),
+                                    onPressed: () {
+                                      pushNewScreen(
+                                        context,
+                                        screen: TagsPosts(
+                                          tag: tags[index],
+                                        ),
+                                        withNavBar: false, // OPTIONAL VALUE. True by default.
+                                        pageTransitionAnimation: PageTransitionAnimation.fade,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    children: <Widget>[
+                      Container(
+                        height: 0.10,
+                        color: Colors.white,
+                      ),
+                      SimpleDialogOption(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(5.0),
+                            child: Text(
+                              "Done",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          )
+        : null;
   }
 }

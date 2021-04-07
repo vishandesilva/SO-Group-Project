@@ -40,9 +40,19 @@ class _UploadPageState extends State<UploadPage> {
   String postID = Uuid().v4();
   // disable the post button to prevent spam
   bool isUploading = false;
-  TextEditingController captionController = TextEditingController();
-  TextEditingController locationController = TextEditingController();
+  TextEditingController captionController;
+  TextEditingController locationController;
+  TextEditingController tagController;
+  List<String> tagsList = [];
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    captionController = TextEditingController();
+    locationController = TextEditingController();
+    tagController = TextEditingController();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,8 +121,7 @@ class _UploadPageState extends State<UploadPage> {
         return;
       }
       SnackBar snackBar = SnackBar(
-        content:
-            Text('The selected image contains faces which are not allowed'),
+        content: Text('The selected image contains faces which are not allowed'),
       );
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
@@ -197,10 +206,8 @@ class _UploadPageState extends State<UploadPage> {
   compressImage() async {
     final tempDirectory = await getTemporaryDirectory();
     final path = tempDirectory.path;
-    imageLib.Image tempImageFile =
-        imageLib.decodeImage(postImage.readAsBytesSync());
-    final compressedImageFile = File('$path/img_$postID.jpg')
-      ..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
+    imageLib.Image tempImageFile = imageLib.decodeImage(postImage.readAsBytesSync());
+    final compressedImageFile = File('$path/img_$postID.jpg')..writeAsBytesSync(imageLib.encodeJpg(tempImageFile, quality: 85));
     setState(() => postImage = compressedImageFile);
   }
 
@@ -243,12 +250,11 @@ class _UploadPageState extends State<UploadPage> {
 
     List<geocoding.Placemark> placemarks =
         await geocoding.placemarkFromCoordinates(theLocation.latitude, theLocation.longitude, localeIdentifier: 'en');
-    
+
     if (placemarks.isNotEmpty) {
       if (placemarks[0].locality != null && placemarks[0].locality != "") {
         setState(() {
-          locationController.text =
-              placemarks[0].locality + ", " + placemarks[0].country;
+          locationController.text = placemarks[0].locality + ", " + placemarks[0].country;
         });
       } else {
         setState(() {
@@ -257,13 +263,10 @@ class _UploadPageState extends State<UploadPage> {
       }
     } else if (placemarks.isEmpty) {
       theLocation = LatLng(userLocation.latitude, userLocation.longitude);
-      placemarks = await geocoding.placemarkFromCoordinates(
-          theLocation.latitude, theLocation.longitude,
-          localeIdentifier: 'en');
+      placemarks = await geocoding.placemarkFromCoordinates(theLocation.latitude, theLocation.longitude, localeIdentifier: 'en');
 
       setState(() {
-        locationController.text =
-            placemarks[0].locality + ", " + placemarks[0].country;
+        locationController.text = placemarks[0].locality + ", " + placemarks[0].country;
       });
     }
   }
@@ -285,6 +288,7 @@ class _UploadPageState extends State<UploadPage> {
       "contest": widget.contestName,
       "location": location,
       "timestamp": timestamp,
+      "tags": tagsList,
       "votes": {},
     });
   }
@@ -292,6 +296,7 @@ class _UploadPageState extends State<UploadPage> {
   // upload form to enter details once photo has been picked
   Scaffold buildUploadFormScreen() {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
           "New Post",
@@ -360,8 +365,8 @@ class _UploadPageState extends State<UploadPage> {
                 Center(
                   child: Container(
                     padding: EdgeInsets.only(bottom: 10.0),
-                    height: MediaQuery.of(context).size.height * 0.55,
-                    width: MediaQuery.of(context).size.width * 0.95,
+                    height: MediaQuery.of(context).size.height * 0.50,
+                    width: MediaQuery.of(context).size.width,
                     child: AspectRatio(
                       aspectRatio: 16 / 9,
                       child: Container(
@@ -395,16 +400,19 @@ class _UploadPageState extends State<UploadPage> {
                         Divider(
                           height: 0.01,
                         ),
-                        TextField(
-                          controller: locationController,
-                          enabled: true,
-                          style: TextStyle(
-                            color: Colors.white,
-                            decoration: TextDecoration.none,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: "Add location",
-                            hintStyle: TextStyle(color: Colors.white38),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: TextField(
+                            controller: locationController,
+                            enabled: true,
+                            style: TextStyle(
+                              color: Colors.white,
+                              decoration: TextDecoration.none,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: "Add location",
+                              hintStyle: TextStyle(color: Colors.white38),
+                            ),
                           ),
                         ),
                         Divider(
@@ -447,19 +455,19 @@ class _UploadPageState extends State<UploadPage> {
                             style: TextStyle(color: Colors.white),
                           ),
                           icon: Icon(
-                            CupertinoIcons.tag,
+                            Icons.pin_drop_outlined,
                             color: Theme.of(context).iconTheme.color,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20.0),
                           ),
                           color: Theme.of(context).primaryColor,
-                          onPressed: () => getLocation(),
+                          onPressed: () => addTags(),
                         ),
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
     );
@@ -526,6 +534,130 @@ class _UploadPageState extends State<UploadPage> {
           ],
         ),
       ),
+    );
+  }
+
+  addTags() {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        bool _chatName = true;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SimpleDialog(
+              contentPadding: EdgeInsets.all(0.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              backgroundColor: Colors.grey[900],
+              title: Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Container(
+                  width: double.maxFinite,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          "Add tags",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          controller: tagController,
+                          decoration: InputDecoration(
+                            labelText: "Tag name",
+                            labelStyle: TextStyle(color: Colors.white),
+                            errorText: !_chatName ? "enter a tag name" : null,
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                          ),
+                          cursorColor: Colors.white,
+                          style: TextStyle(
+                            color: Colors.white,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 300,
+                        width: double.maxFinite,
+                        child: ListView.builder(
+                          padding: EdgeInsets.all(8.0),
+                          shrinkWrap: true,
+                          itemCount: tagsList.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Chip(
+                              backgroundColor: Theme.of(context).accentColor,
+                              label: Text(tagsList[index]),
+                            );
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              children: <Widget>[
+                Container(
+                  height: 0.10,
+                  color: Colors.white,
+                ),
+                SimpleDialogOption(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Text(
+                        "Add",
+                        style: TextStyle(
+                          color: Theme.of(context).accentColor,
+                          fontSize: 17.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    if (tagController.text.isEmpty) {
+                      _chatName = false;
+                    } else {
+                      _chatName = true;
+                    }
+                    if (_chatName) {
+                      setState(() => tagsList.add(tagController.text));
+                      tagController.clear();
+                    }
+                  },
+                ),
+                Container(
+                  height: 0.10,
+                  color: Colors.white,
+                ),
+                SimpleDialogOption(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Text(
+                        "Done",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onPressed: () {
+                    tagController.clear();
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

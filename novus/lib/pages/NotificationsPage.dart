@@ -49,7 +49,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             ),
           ),
           StreamBuilder(
-            stream: userReference.orderBy('points', descending: true).limit(5).get().asStream(),
+            stream: userReference.orderBy('points', descending: true).limit(5).snapshots(),
             builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
               if (!snapshot.hasData) return circularProgress();
               List<UserResult> trending = [];

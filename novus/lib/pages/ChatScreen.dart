@@ -114,38 +114,40 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
           )
         ],
       ),
-      body: GestureDetector(
-        onTap: () => WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
-        child: StreamBuilder(
-          stream: chatReference.doc(widget.chatId).collection('messages').orderBy('time', descending: true).get().asStream(),
-          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            List<Message> msgs = [];
-            if (!snapshot.hasData) return circularProgress();
-            snapshot.data.docs.forEach((element) {
-              msgs.add(Message.fromDocument(element));
-            });
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: EdgeInsets.all(20),
-                    reverse: true,
-                    shrinkWrap: true,
-                    itemCount: msgs.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final Message message = msgs[index];
-                      final bool isMe = message.sender == widget.user.id;
-                      final bool isSameUser = prevUserId == message.sender;
-                      prevUserId = message.sender;
-                      return _chatBubble(message, isMe, isSameUser);
-                    },
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: () => WidgetsBinding.instance.focusManager.primaryFocus?.unfocus(),
+          child: StreamBuilder(
+            stream: chatReference.doc(widget.chatId).collection('messages').orderBy('time', descending: true).get().asStream(),
+            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              List<Message> msgs = [];
+              if (!snapshot.hasData) return circularProgress();
+              snapshot.data.docs.forEach((element) {
+                msgs.add(Message.fromDocument(element));
+              });
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: EdgeInsets.all(20),
+                      reverse: true,
+                      shrinkWrap: true,
+                      itemCount: msgs.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final Message message = msgs[index];
+                        final bool isMe = message.sender == widget.user.id;
+                        final bool isSameUser = prevUserId == message.sender;
+                        prevUserId = message.sender;
+                        return _chatBubble(message, isMe, isSameUser);
+                      },
+                    ),
                   ),
-                ),
-                _sendMessageArea(),
-              ],
-            );
-          },
+                  _sendMessageArea(),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -308,11 +310,12 @@ class _ChatScreenState extends State<ChatScreen> with AutomaticKeepAliveClientMi
             onPressed: () async {
               await sendMessage();
               messageController.clear();
-              _scrollController.animateTo(
-                0.0,
-                curve: Curves.easeOut,
-                duration: const Duration(milliseconds: 300),
-              );
+              setState(() {});
+              // _scrollController.animateTo(
+              //   0.0,
+              //   curve: Curves.easeOut,
+              //   duration: const Duration(milliseconds: 300),
+              // );
             },
           ),
         ],

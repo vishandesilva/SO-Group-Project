@@ -30,11 +30,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   void initState() {
-    super.initState();
     getProfilePosts();
     getFollowers();
     getFollowing();
     checkIsFollowing();
+    super.initState();
   }
 
   checkIsFollowing() async {
@@ -117,17 +117,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               builder: (context) => EditProfilePage(userId: widget.userid),
                             ),
                           ),
-                        ),
-                        ListTile(
-                          leading: Icon(
-                            Icons.border_color,
-                            color: Theme.of(context).iconTheme.color,
-                          ),
-                          title: Text(
-                            'Feedback',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          onTap: () => {Navigator.of(context).pop()},
                         ),
                         ListTile(
                           leading: Icon(

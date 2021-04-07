@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_countdown_timer/current_remaining_time.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
-import 'package:gradient_text/gradient_text.dart';
 import 'package:novus/models/user.dart';
 import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/UploadPage.dart';
@@ -47,11 +46,13 @@ class _ContestState extends State<Contest> {
   bool isLoading = false;
   List<Post> posts;
   bool lockPostButton = false;
+  bool temp;
   LeaderboardTile userPlacement;
 
   void initState() {
     super.initState();
     getContestPosts();
+    getCountedFor();
   }
 
   @override
@@ -77,18 +78,10 @@ class _ContestState extends State<Contest> {
               color: Theme.of(context).accentColor,
             ),
           ),
-          title: GradientText(
+          title: Text(
             widget.contestName,
-            gradient: LinearGradient(
-              begin: Alignment.bottomLeft,
-              end: Alignment.topRight,
-              colors: [
-                Theme.of(context).primaryColor,
-                Theme.of(context).accentColor,
-              ],
-            ),
             style: TextStyle(
-              color: Theme.of(context).primaryColor,
+              color: Colors.white,
               fontSize: 25.0,
             ),
           ),
@@ -143,17 +136,6 @@ class _ContestState extends State<Contest> {
                             ),
                             onTap: () => addParticipants(),
                           ),
-                          ListTile(
-                            leading: Icon(
-                              Icons.event_busy_outlined,
-                              color: Theme.of(context).iconTheme.color,
-                            ),
-                            title: Text(
-                              'End contest',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            onTap: () => null,
-                          ),
                         ],
                       ),
                     ),
@@ -202,14 +184,7 @@ class _ContestState extends State<Contest> {
                               endTime: widget.endDate,
                               widgetBuilder: (context, CurrentRemainingTime time) {
                                 if (time == null) {
-                                  bool temp;
-                                  contestReference
-                                      .doc(widget.contestId)
-                                      .collection('partcipants')
-                                      .doc(user.id)
-                                      .get()
-                                      .then((value) => temp = value.data()['pointsRecorded']);
-                                  print(temp);
+                                  contestReference.doc(widget.contestId).update({'contestEnd': true});
                                   if (!temp) {
                                     userReference.doc(user.id).update({'points': FieldValue.increment(getScore(posts))});
                                     contestReference
@@ -219,98 +194,103 @@ class _ContestState extends State<Contest> {
                                         .update({'pointsRecorded': true});
                                   }
                                   lockPostButton = true;
-                                  return TextButton(
-                                    child: Text("View results"),
-                                    onPressed: () {
-                                      return showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return SimpleDialog(
-                                            contentPadding: EdgeInsets.all(0.0),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(20.0),
-                                            ),
-                                            backgroundColor: Colors.grey[900],
-                                            title: Center(
-                                              child: Column(
-                                                children: [
-                                                  Padding(
-                                                    padding: const EdgeInsets.all(5.0),
-                                                    child: Text(
-                                                      "Achievements",
-                                                      style: TextStyle(color: Colors.white),
-                                                    ),
-                                                  ),
-                                                  Center(
-                                                    child: Container(
-                                                      width: double.maxFinite,
-                                                      height: 100,
-                                                      child: FutureBuilder(
-                                                        future: getResult(),
-                                                        builder: (context, snapshot) {
-                                                          if (!snapshot.hasData) return circularProgress();
-                                                          return Container(
-                                                            child: ListView(
-                                                              shrinkWrap: true,
-                                                              children: snapshot.data,
-                                                            ),
-                                                          );
-                                                        },
+                                  return Center(
+                                    child: TextButton(
+                                      child: Text(
+                                        "View results",
+                                        style: TextStyle(color: Theme.of(context).accentColor, fontSize: 20.0),
+                                      ),
+                                      onPressed: () {
+                                        return showDialog(
+                                          context: context,
+                                          builder: (context) {
+                                            return SimpleDialog(
+                                              contentPadding: EdgeInsets.all(0.0),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(20.0),
+                                              ),
+                                              backgroundColor: Colors.grey[900],
+                                              title: Center(
+                                                child: Column(
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(5.0),
+                                                      child: Text(
+                                                        "Achievements",
+                                                        style: TextStyle(color: Colors.white),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            children: <Widget>[
-                                              Container(
-                                                height: 0.10,
-                                                color: Colors.white,
-                                              ),
-                                              SimpleDialogOption(
-                                                child: Center(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(5.0),
-                                                    child: Text(
-                                                      "Add to profile",
-                                                      style: TextStyle(
-                                                        color: Theme.of(context).accentColor,
-                                                        fontSize: 17.0,
+                                                    Center(
+                                                      child: Container(
+                                                        width: double.maxFinite,
+                                                        height: 100,
+                                                        child: FutureBuilder(
+                                                          future: getResult(),
+                                                          builder: (context, snapshot) {
+                                                            if (!snapshot.hasData) return circularProgress();
+                                                            return Container(
+                                                              child: ListView(
+                                                                shrinkWrap: true,
+                                                                children: snapshot.data,
+                                                              ),
+                                                            );
+                                                          },
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
+                                                  ],
                                                 ),
-                                                onPressed: () {
-                                                  addAchievementProfile();
-                                                  Navigator.pop(context);
-                                                },
                                               ),
-                                              Container(
-                                                height: 0.10,
-                                                color: Colors.white,
-                                              ),
-                                              SimpleDialogOption(
-                                                child: Center(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(5.0),
-                                                    child: Text(
-                                                      "Back",
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 17.0,
+                                              children: <Widget>[
+                                                Container(
+                                                  height: 0.10,
+                                                  color: Colors.white,
+                                                ),
+                                                SimpleDialogOption(
+                                                  child: Center(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.all(5.0),
+                                                      child: Text(
+                                                        "Add to profile",
+                                                        style: TextStyle(
+                                                          color: Theme.of(context).accentColor,
+                                                          fontSize: 17.0,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
+                                                  onPressed: () {
+                                                    addAchievementProfile();
+                                                    Navigator.pop(context);
+                                                  },
                                                 ),
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                },
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    },
+                                                Container(
+                                                  height: 0.10,
+                                                  color: Colors.white,
+                                                ),
+                                                SimpleDialogOption(
+                                                  child: Center(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.all(5.0),
+                                                      child: Text(
+                                                        "Back",
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 17.0,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
                                   );
                                 }
                                 return Padding(
@@ -632,9 +612,17 @@ class _ContestState extends State<Contest> {
 
   int getScore(List<Post> postList) {
     int score = 0;
+
     for (var i = 0; i < postList.length; i++) {
       score = score + postList[i].votes.length;
     }
+
+    if (this.mounted) {
+      setState(() {
+        temp = true;
+      });
+    }
+
     return score;
   }
 
@@ -834,6 +822,16 @@ class _ContestState extends State<Contest> {
         },
       );
     }
+  }
+
+  void getCountedFor() async {
+    bool tempBool;
+    await contestReference.doc(widget.contestId).collection('partcipants').doc(user.id).get().then(
+          (value) => tempBool = value.data()['pointsRecorded'],
+        );
+    setState(() {
+      temp = tempBool;
+    });
   }
 }
 

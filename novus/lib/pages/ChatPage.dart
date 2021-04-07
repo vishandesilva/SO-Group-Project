@@ -7,6 +7,7 @@ import 'package:novus/pages/HomePage.dart';
 import 'package:novus/pages/ChatScreen.dart';
 import 'package:novus/widgets/ProgressWidget.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class ChatPage extends StatefulWidget {
   @override
@@ -60,7 +61,7 @@ class _ChatPageState extends State<ChatPage> {
         ],
       ),
       body: StreamBuilder(
-        stream: chatReference.where("members", arrayContains: user.id).get().asStream(),
+        stream: chatReference.where("members", arrayContains: user.id).snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (!snapshot.hasData) return circularProgress();
           List<ChatTiles> temp = [];
@@ -233,6 +234,8 @@ class _ChatTilesState extends State<ChatTiles> {
   String name;
   String chatId;
   List members;
+  String lastMessage;
+  Timestamp lastTime;
 
   _ChatTilesState({
     this.chatPhotoUrl,
@@ -240,6 +243,12 @@ class _ChatTilesState extends State<ChatTiles> {
     this.chatId,
     this.members,
   });
+
+  @override
+  void initState() {
+    getLastMessage();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -314,14 +323,14 @@ class _ChatTilesState extends State<ChatTiles> {
                           //       ),
                         ],
                       ),
-                      // Text(
-                      //   chat.time,
-                      //   style: TextStyle(
-                      //     fontSize: 11,
-                      //     fontWeight: FontWeight.w300,
-                      //     color: Colors.white38,
-                      //   ),
-                      // ),
+                      Text(
+                        lastTime == null ? "" : timeago.format(lastTime.toDate()),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w300,
+                          color: Colors.white60,
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(
@@ -329,15 +338,15 @@ class _ChatTilesState extends State<ChatTiles> {
                   ),
                   Container(
                     alignment: Alignment.topLeft,
-                    // child: Text(
-                    //   chat.text,
-                    //   style: TextStyle(
-                    //     fontSize: 13,
-                    //     color: Colors.white60,
-                    //   ),
-                    //   overflow: TextOverflow.ellipsis,
-                    //   maxLines: 2,
-                    // ),
+                    child: Text(
+                      lastMessage == null ? "" : lastMessage,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white60,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
                   ),
                 ],
               ),
@@ -346,5 +355,29 @@ class _ChatTilesState extends State<ChatTiles> {
         ),
       ),
     );
+  }
+
+  void getLastMessage() async {
+    String temp;
+    Timestamp tempTime;
+    await chatReference
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('time', descending: true)
+        .get()
+        .then((value) => value.docs.first.exists ? temp = value.docs.first.data()['message'] : null)
+        .onError((error, stackTrace) => null);
+
+    await chatReference
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('time', descending: true)
+        .get()
+        .then((value) => value.docs.first.exists ? tempTime = value.docs.first.data()['time'] : null)
+        .onError((error, stackTrace) => null);
+    setState(() {
+      lastMessage = temp;
+      lastTime = tempTime;
+    });
   }
 }
